@@ -2,7 +2,7 @@
 //  gleemingApp.swift
 //  gleeming
 //
-//  Created by Ervan Roni Fahrudi on 29/08/25.
+//  Created by ervan on 29/08/25.
 //
 
 import SwiftUI
