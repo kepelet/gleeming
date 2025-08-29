@@ -66,6 +66,7 @@ class GameViewModel: ObservableObject {
             for column in 0..<gridCells[row].count {
                 gridCells[row][column].isHighlighted = false
                 gridCells[row][column].isSelected = false
+                gridCells[row][column].isWrong = false
                 gridCells[row][column].animationDelay = 0.0
             }
         }
@@ -117,19 +118,28 @@ class GameViewModel: ObservableObject {
     func cellTapped(at position: GridPosition) {
         guard gameState == .playing else { return }
         
-        // viswal feedback
+        playerSequence.append(position)
+        
+        // Check if the move is correct
+        if playerSequence[currentSequenceIndex] != sequence[currentSequenceIndex] {
+            // Wrong move - show red feedback
+            gridCells[position.row][position.column].isWrong = true
+            
+            Task {
+                try? await Task.sleep(nanoseconds: UInt64(0.3 * 1_000_000_000))
+                gridCells[position.row][position.column].isWrong = false
+            }
+            
+            gameOver()
+            return
+        }
+        
+        // Correct move - show green feedback
         gridCells[position.row][position.column].isSelected = true
         
         Task {
             try? await Task.sleep(nanoseconds: UInt64(0.2 * 1_000_000_000))
             gridCells[position.row][position.column].isSelected = false
-        }
-        
-        playerSequence.append(position)
-        
-        if playerSequence[currentSequenceIndex] != sequence[currentSequenceIndex] {
-            gameOver()
-            return
         }
         
         currentSequenceIndex += 1

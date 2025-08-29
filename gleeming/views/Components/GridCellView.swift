@@ -27,6 +27,7 @@ struct GridCellView: View {
                 .animation(.easeInOut(duration: 0.1), value: isPressed)
                 .animation(.easeInOut(duration: 0.3), value: cell.isHighlighted)
                 .animation(.easeInOut(duration: 0.2), value: cell.isSelected)
+                .animation(.easeInOut(duration: 0.2), value: cell.isWrong)
         }
         .buttonStyle(PlainButtonStyle())
         .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
@@ -37,6 +38,8 @@ struct GridCellView: View {
     private var cellColor: Color {
         if cell.isHighlighted {
             return .blue.opacity(0.8)
+        } else if cell.isWrong {
+            return .red.opacity(0.6)
         } else if cell.isSelected {
             return .green.opacity(0.6)
         } else {
@@ -47,6 +50,8 @@ struct GridCellView: View {
     private var strokeColor: Color {
         if cell.isHighlighted {
             return .blue
+        } else if cell.isWrong {
+            return .red
         } else if cell.isSelected {
             return .green
         } else {
@@ -55,7 +60,7 @@ struct GridCellView: View {
     }
     
     private var strokeWidth: CGFloat {
-        if cell.isHighlighted || cell.isSelected {
+        if cell.isHighlighted || cell.isSelected || cell.isWrong {
             return 3
         } else {
             return 1
@@ -70,6 +75,8 @@ struct GridCellView: View {
         GridCellView(cell: GridCell(position: GridPosition(row: 0, column: 1), isHighlighted: true)) {}
         
         GridCellView(cell: GridCell(position: GridPosition(row: 0, column: 2), isSelected: true)) {}
+        
+        GridCellView(cell: GridCell(position: GridPosition(row: 0, column: 3), isWrong: true)) {}
     }
     .padding()
 }

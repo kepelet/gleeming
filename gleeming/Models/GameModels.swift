@@ -23,6 +23,7 @@ struct GridCell: Identifiable, Equatable {
     let position: GridPosition
     var isHighlighted: Bool = false
     var isSelected: Bool = false
+    var isWrong: Bool = false
     var animationDelay: Double = 0.0
 }
 
