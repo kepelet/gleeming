@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct WelcomeView: View {
+    @Binding var showGame: Bool
     
     var body: some View {
         VStack(spacing: 32) {
@@ -59,8 +60,11 @@ struct WelcomeView: View {
             Spacer()
             
             // Start button
-            Button("Start Playing"){}
+            Button("Start Playing") {
+                showGame = true
+            }
             .buttonStyle(PrimaryButtonStyle())
+            
             Spacer()
         }
         .padding(.horizontal, 20)
@@ -88,5 +92,5 @@ struct HowToPlayItem: View {
 }
 
 #Preview {
-    WelcomeView()
+    WelcomeView(showGame: .constant(false))
 }
