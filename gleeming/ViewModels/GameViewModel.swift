@@ -17,7 +17,8 @@ class GameViewModel: ObservableObject {
     @Published var playerSequence: [GridPosition] = []
     @Published var currentSequenceIndex = 0
     
-    private let configuration = GameConfiguration.standard
+    private var gameSettings = GameSettings.shared
+    private var configuration: GameConfiguration { gameSettings.createGameConfiguration() }
     private var showSequenceTask: Task<Void, Never>?
     
     init() {
@@ -34,6 +35,19 @@ class GameViewModel: ObservableObject {
                 cellRow.append(cell)
             }
             gridCells.append(cellRow)
+        }
+    }
+    
+    // MARK: - Settings Update
+    func refreshGridForSettingsChange() {
+        print("grid size: \(gameSettings.gridSize)")
+        setupGrid()
+        if gameState == .ready {
+            // If we're not in an active game, just refresh the grid
+            resetGrid()
+        } else {
+            // If we're in an active game, reset to ready state
+            resetGame()
         }
     }
     

@@ -9,6 +9,8 @@ import SwiftUI
 
 struct SettingsView: View {
     @Binding var isPresented: Bool
+    @ObservedObject var gameSettings = GameSettings.shared
+    @State private var showingGridSizePicker = false
     
     var body: some View {
         NavigationView {
@@ -34,6 +36,31 @@ struct SettingsView: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        .actionSheet(isPresented: $showingGridSizePicker) {
+            ActionSheet(
+                title: Text("Select Grid Size"),
+                message: Text("Choose the grid size for your game"),
+                buttons: gridSizeButtons
+            )
+        }
+    }
+    
+    private var gridSizeButtons: [ActionSheet.Button] {
+        var buttons: [ActionSheet.Button] = []
+        
+        for size in gameSettings.availableGridSizes {
+            let sizeDisplay = "\(size)×\(size)"
+            let isSelected = size == gameSettings.gridSize
+            let title = isSelected ? "✓ \(sizeDisplay)" : sizeDisplay
+            
+            buttons.append(.default(Text(title)) {
+                gameSettings.gridSize = size
+                gameSettings.saveSettings()
+            })
+        }
+        
+        buttons.append(.cancel())
+        return buttons
     }
     
     private var headerView: some View {
@@ -72,14 +99,16 @@ struct SettingsView: View {
             SettingsRow(
                 icon: "grid",
                 title: "Grid Size",
-                subtitle: "4x4",
-                action: {}
+                subtitle: gameSettings.gridSizeDisplay,
+                action: {
+                    showingGridSizePicker = true
+                }
             )
             
             SettingsRow(
                 icon: "timer",
                 title: "Show Duration",
-                subtitle: "0.6 seconds",
+                subtitle: gameSettings.showDurationDisplay,
                 action: {}
             )
         }
@@ -90,19 +119,19 @@ struct SettingsView: View {
             SettingsToggleRow(
                 icon: "speaker.wave.2",
                 title: "Sound Effects",
-                isOn: .constant(true)
+                isOn: $gameSettings.soundEffectsEnabled
             )
             
             SettingsToggleRow(
                 icon: "music.note",
                 title: "Background Music",
-                isOn: .constant(false)
+                isOn: $gameSettings.backgroundMusicEnabled
             )
             
             SettingsRow(
                 icon: "speaker.3",
                 title: "Volume",
-                subtitle: "80%",
+                subtitle: gameSettings.volumeDisplay,
                 action: {}
             )
         }
@@ -113,19 +142,19 @@ struct SettingsView: View {
             SettingsToggleRow(
                 icon: "wand.and.rays",
                 title: "Animations",
-                isOn: .constant(true)
+                isOn: $gameSettings.animationsEnabled
             )
             
             SettingsToggleRow(
                 icon: "iphone.radiowaves.left.and.right",
                 title: "Haptic Feedback",
-                isOn: .constant(true)
+                isOn: $gameSettings.hapticFeedbackEnabled
             )
             
             SettingsRow(
                 icon: "paintbrush",
                 title: "Theme",
-                subtitle: "Default",
+                subtitle: gameSettings.selectedTheme.displayName,
                 action: {}
             )
         }

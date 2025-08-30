@@ -9,6 +9,7 @@ import SwiftUI
 
 struct GameView: View {
     @StateObject private var viewModel = GameViewModel()
+    @ObservedObject private var gameSettings = GameSettings.shared
     @State private var showingGameOver = false
     @State private var showingSettings = false
     @Binding var showGame: Bool
@@ -41,6 +42,9 @@ struct GameView: View {
             if newValue == .gameOver {
                 showingGameOver = true
             }
+        }
+        .onChange(of: gameSettings.gridSize) { oldValue, newValue in
+            viewModel.refreshGridForSettingsChange()
         }
         .alert("Game Over", isPresented: $showingGameOver) {
             Button("Play Again") {
