@@ -82,8 +82,9 @@ struct GameView: View {
                 }) {
                     Image(systemName: "gearshape")
                         .font(.title2)
-                        .foregroundColor(.blue)
+                        .foregroundColor(isSettingsDisabled ? .gray : .blue)
                 }
+                .disabled(isSettingsDisabled)
                 .frame(width: 60, alignment: .trailing)
             }
             
@@ -169,6 +170,10 @@ struct GameView: View {
         case .gameOver:
             return .red
         }
+    }
+    
+    private var isSettingsDisabled: Bool {
+        return viewModel.gameState == .showing || viewModel.gameState == .playing
     }
 }
 
