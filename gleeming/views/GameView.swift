@@ -132,12 +132,6 @@ struct GameView: View {
                 }
                 .buttonStyle(SecondaryButtonStyle())
                 
-                if viewModel.gameState == .gameOver {
-                    Button("Play Again") {
-                        viewModel.startNewGame()
-                    }
-                    .buttonStyle(PrimaryButtonStyle())
-                }
             }
         }
     }
