@@ -9,9 +9,24 @@ import SwiftUI
 
 struct WelcomeView: View {
     @Binding var showGame: Bool
+    @State private var showingSettings = false
     
     var body: some View {
         VStack(spacing: 32) {
+            // Settings button in top trailing corner
+            HStack {
+                Spacer()
+                Button(action: {
+                    showingSettings = true
+                }) {
+                    Image(systemName: "gearshape")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                }
+                .padding(.top, 20)
+                .padding(.trailing, 20)
+            }
+            
             Spacer()
             
             VStack(spacing: 16) {
@@ -68,6 +83,9 @@ struct WelcomeView: View {
             Spacer()
         }
         .padding(.horizontal, 20)
+        .sheet(isPresented: $showingSettings) {
+            SettingsView(isPresented: $showingSettings)
+        }
     }
 }
 

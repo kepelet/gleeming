@@ -10,6 +10,7 @@ import SwiftUI
 struct GameView: View {
     @StateObject private var viewModel = GameViewModel()
     @State private var showingGameOver = false
+    @State private var showingSettings = false
     @Binding var showGame: Bool
     
     init(showGame: Binding<Bool> = .constant(true)) {
@@ -52,6 +53,9 @@ struct GameView: View {
         } message: {
             Text("Final Score: \(viewModel.gameScore.totalScore)\nBest Streak: \(viewModel.gameScore.bestStreak)")
         }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView(isPresented: $showingSettings)
+        }
     }
     
     private var headerView: some View {
@@ -73,8 +77,14 @@ struct GameView: View {
                 
                 Spacer()
                 
-                // Placeholder for balance
-                Text("").frame(width: 60)
+                Button(action: {
+                    showingSettings = true
+                }) {
+                    Image(systemName: "gearshape")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                }
+                .frame(width: 60, alignment: .trailing)
             }
             
             ScoreDisplayView(
