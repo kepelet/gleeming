@@ -20,6 +20,7 @@ class GameViewModel: ObservableObject {
     private var gameSettings = GameSettings.shared
     private var configuration: GameConfiguration { gameSettings.createGameConfiguration() }
     private var showSequenceTask: Task<Void, Never>?
+    private var baseSequence: [GridPosition] = [] // For progressive mode
     
     init() {
         setupGrid()
@@ -40,7 +41,8 @@ class GameViewModel: ObservableObject {
     
     // MARK: - Settings Update
     func refreshGridForSettingsChange() {
-        print("grid size: \(gameSettings.gridSize)")
+        print("🔄 Refreshing grid for settings change. Grid size: \(gameSettings.gridSize), Difficulty: \(gameSettings.difficultyMode.displayName)")
+        baseSequence = [] // Reset base sequence when settings change
         setupGrid()
         if gameState == .ready {
             // If we're not in an active game, just refresh the grid
@@ -55,6 +57,7 @@ class GameViewModel: ObservableObject {
     func startNewGame() {
         gameScore = GameScore()
         gameScore.currentSequenceLength = configuration.initialSequenceLength
+        baseSequence = [] // Reset base sequence for progressive mode
         startNewRound()
     }
     
@@ -72,6 +75,7 @@ class GameViewModel: ObservableObject {
         sequence = []
         playerSequence = []
         currentSequenceIndex = 0
+        baseSequence = [] // Reset base sequence for progressive mode
     }
     
     // MARK: - Grid Management
@@ -88,11 +92,38 @@ class GameViewModel: ObservableObject {
     
     // MARK: - Sequence Generation
     private func generateSequence() {
+        switch gameSettings.difficultyMode {
+        case .random:
+            generateRandomSequence()
+        case .progressive:
+            generateProgressiveSequence()
+        }
+    }
+    
+    private func generateRandomSequence() {
         sequence = []
         for _ in 0..<gameScore.currentSequenceLength {
             let randomRow = Int.random(in: 0..<configuration.gridSize)
             let randomColumn = Int.random(in: 0..<configuration.gridSize)
             sequence.append(GridPosition(row: randomRow, column: randomColumn))
+        }
+    }
+    
+    private func generateProgressiveSequence() {
+        if baseSequence.isEmpty {
+            // First level - generate initial sequence
+            for _ in 0..<gameScore.currentSequenceLength {
+                let randomRow = Int.random(in: 0..<configuration.gridSize)
+                let randomColumn = Int.random(in: 0..<configuration.gridSize)
+                baseSequence.append(GridPosition(row: randomRow, column: randomColumn))
+            }
+            sequence = baseSequence
+        } else {
+            // Subsequent levels - add one more step to the base sequence
+            let randomRow = Int.random(in: 0..<configuration.gridSize)
+            let randomColumn = Int.random(in: 0..<configuration.gridSize)
+            baseSequence.append(GridPosition(row: randomRow, column: randomColumn))
+            sequence = baseSequence
         }
     }
     

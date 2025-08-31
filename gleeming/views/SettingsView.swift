@@ -11,6 +11,7 @@ struct SettingsView: View {
     @Binding var isPresented: Bool
     @ObservedObject var gameSettings = GameSettings.shared
     @State private var showingGridSizePicker = false
+    @State private var showingDifficultyPicker = false
     
     var body: some View {
         NavigationView {
@@ -36,31 +37,37 @@ struct SettingsView: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
-        .actionSheet(isPresented: $showingGridSizePicker) {
-            ActionSheet(
-                title: Text("Select Grid Size"),
-                message: Text("Choose the grid size for your game"),
-                buttons: gridSizeButtons
-            )
-        }
-    }
-    
-    private var gridSizeButtons: [ActionSheet.Button] {
-        var buttons: [ActionSheet.Button] = []
-        
-        for size in gameSettings.availableGridSizes {
-            let sizeDisplay = "\(size)×\(size)"
-            let isSelected = size == gameSettings.gridSize
-            let title = isSelected ? "✓ \(sizeDisplay)" : sizeDisplay
+        .confirmationDialog("Select Grid Size", isPresented: $showingGridSizePicker) {
+            ForEach(gameSettings.availableGridSizes, id: \.self) { size in
+                let sizeDisplay = "\(size)×\(size)"
+                let isSelected = size == gameSettings.gridSize
+                let title = isSelected ? "✓ \(sizeDisplay)" : sizeDisplay
+                
+                Button(title) {
+                    gameSettings.gridSize = size
+                    gameSettings.saveSettings()
+                }
+            }
             
-            buttons.append(.default(Text(title)) {
-                gameSettings.gridSize = size
-                gameSettings.saveSettings()
-            })
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Choose the grid size for your game")
         }
-        
-        buttons.append(.cancel())
-        return buttons
+        .confirmationDialog("Select Difficulty Mode", isPresented: $showingDifficultyPicker) {
+            ForEach(GameSettings.DifficultyMode.allCases, id: \.self) { mode in
+                let isSelected = mode == gameSettings.difficultyMode
+                let title = isSelected ? "✓ \(mode.displayName)" : mode.displayName
+                
+                Button(title) {
+                    gameSettings.difficultyMode = mode
+                    gameSettings.saveSettings()
+                }
+            }
+            
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Random: New pattern each level\nProgressive: Each level adds one step")
+        }
     }
     
     private var headerView: some View {
@@ -92,8 +99,10 @@ struct SettingsView: View {
             SettingsRow(
                 icon: "gamecontroller",
                 title: "Difficulty",
-                subtitle: "Easy",
-                action: {}
+                subtitle: gameSettings.difficultyMode.displayName,
+                action: {
+                    showingDifficultyPicker = true
+                }
             )
             
             SettingsRow(

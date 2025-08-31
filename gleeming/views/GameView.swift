@@ -46,6 +46,9 @@ struct GameView: View {
         .onChange(of: gameSettings.gridSize) { oldValue, newValue in
             viewModel.refreshGridForSettingsChange()
         }
+        .onChange(of: gameSettings.difficultyMode) { oldValue, newValue in
+            viewModel.refreshGridForSettingsChange()
+        }
         .alert("Game Over", isPresented: $showingGameOver) {
             Button("Play Again") {
                 viewModel.startNewGame()

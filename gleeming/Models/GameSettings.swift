@@ -11,6 +11,7 @@ import SwiftUI
 // MARK: - Game Settings
 class GameSettings: ObservableObject {
     @Published var gridSize: Int = 4
+    @Published var difficultyMode: DifficultyMode = .random
     @Published var soundEffectsEnabled: Bool = true
     @Published var backgroundMusicEnabled: Bool = false
     @Published var animationsEnabled: Bool = true
@@ -23,6 +24,25 @@ class GameSettings: ObservableObject {
     
     private init() {
         loadSettings()
+    }
+    
+    // MARK: - Difficulty Mode
+    enum DifficultyMode: String, CaseIterable {
+        case random = "Random"
+        case progressive = "Progressive"
+        
+        var displayName: String {
+            return rawValue
+        }
+        
+        var description: String {
+            switch self {
+            case .random:
+                return "Each level has a completely new random pattern"
+            case .progressive:
+                return "Each level adds one step to the previous pattern"
+            }
+        }
     }
     
     // MARK: - Grid Size Options
