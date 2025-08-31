@@ -12,6 +12,7 @@ struct GameView: View {
     @ObservedObject private var gameSettings = GameSettings.shared
     @State private var showingGameOver = false
     @State private var showingSettings = false
+    @State private var showingShareResult = false
     @Binding var showGame: Bool
     
     init(showGame: Binding<Bool> = .constant(true)) {
@@ -50,6 +51,9 @@ struct GameView: View {
             viewModel.refreshGridForSettingsChange()
         }
         .alert("Game Over", isPresented: $showingGameOver) {
+            Button("Share Result") {
+                showingShareResult = true
+            }
             Button("Play Again") {
                 viewModel.startNewGame()
             }
@@ -62,6 +66,12 @@ struct GameView: View {
         }
         .sheet(isPresented: $showingSettings) {
             SettingsView(isPresented: $showingSettings)
+        }
+        .sheet(isPresented: $showingShareResult) {
+            ShareResultView(
+                gameScore: viewModel.gameScore,
+                difficultyMode: gameSettings.difficultyMode
+            )
         }
     }
     
@@ -139,6 +149,12 @@ struct GameView: View {
                 }
                 .buttonStyle(SecondaryButtonStyle())
                 
+                if viewModel.gameState == .gameOver && !showingGameOver {
+                    Button("Play Again") {
+                        viewModel.startNewGame()
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                }
             }
         }
     }
