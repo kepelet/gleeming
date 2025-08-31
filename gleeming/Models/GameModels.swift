@@ -69,4 +69,13 @@ struct GameScore {
     mutating func resetStreak() {
         streak = 0
     }
+    
+    // Convenience initializer for testing and previews
+    init(currentLevel: Int = 1, currentSequenceLength: Int = 3, totalScore: Int = 0, streak: Int = 0, bestStreak: Int = 0) {
+        self.currentLevel = currentLevel
+        self.currentSequenceLength = currentSequenceLength
+        self.totalScore = totalScore
+        self.streak = streak
+        self.bestStreak = bestStreak
+    }
 }
