@@ -17,7 +17,7 @@ class GameSettings: ObservableObject {
     @Published var animationsEnabled: Bool = true
     @Published var hapticFeedbackEnabled: Bool = true
     @Published var volume: Float = 0.8
-    @Published var selectedTheme: Theme = .default
+    @Published var selectedTheme: Theme = .auto
     @Published var showDuration: Double = 0.6
     
     static let shared = GameSettings()
@@ -56,12 +56,23 @@ class GameSettings: ObservableObject {
     
     // MARK: - Theme Options
     enum Theme: String, CaseIterable {
-        case `default` = "Default"
+        case auto = "Auto"
+        case light = "Light"
         case dark = "Dark"
-        case colorful = "Colorful"
         
         var displayName: String {
             return rawValue
+        }
+        
+        var description: String {
+            switch self {
+            case .auto:
+                return "Follows system appearance"
+            case .light:
+                return "Always use light mode"
+            case .dark:
+                return "Always use dark mode"
+            }
         }
     }
     

@@ -12,6 +12,7 @@ struct SettingsView: View {
     @ObservedObject var gameSettings = GameSettings.shared
     @State private var showingGridSizePicker = false
     @State private var showingDifficultyPicker = false
+    @State private var showingThemePicker = false
     
     var body: some View {
         NavigationView {
@@ -67,6 +68,21 @@ struct SettingsView: View {
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("Random: New pattern each level\nProgressive: Each level adds one step")
+        }
+        .confirmationDialog("Select Theme", isPresented: $showingThemePicker) {
+            ForEach(GameSettings.Theme.allCases, id: \.self) { theme in
+                let isSelected = theme == gameSettings.selectedTheme
+                let title = isSelected ? "✓ \(theme.displayName)" : theme.displayName
+                
+                Button(title) {
+                    gameSettings.selectedTheme = theme
+                    gameSettings.saveSettings()
+                }
+            }
+            
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Auto: Follows system appearance\nLight: Always light mode\nDark: Always dark mode")
         }
     }
     
@@ -164,7 +180,7 @@ struct SettingsView: View {
                 icon: "paintbrush",
                 title: "Theme",
                 subtitle: gameSettings.selectedTheme.displayName,
-                action: {}
+                action: { showingThemePicker = true }
             )
         }
     }

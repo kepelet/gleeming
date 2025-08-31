@@ -12,6 +12,12 @@ struct GridCellView: View {
     let onTap: () -> Void
     
     @State private var isPressed = false
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.themeManager) private var themeManager
+    
+    private var colors: ThemeManager.GameColors {
+        themeManager.colors(for: colorScheme)
+    }
     
     var body: some View {
         Button(action: {
@@ -37,25 +43,21 @@ struct GridCellView: View {
     
     private var cellColor: Color {
         if cell.isHighlighted {
-            return .blue.opacity(0.8)
+            return colors.cellHighlighted
         } else if cell.isWrong {
-            return .red.opacity(0.6)
+            return colors.cellWrong
         } else if cell.isSelected {
-            return .green.opacity(0.6)
+            return colors.cellSelected
         } else {
-            return Color(.systemGray6)
+            return colors.cellDefault
         }
     }
     
     private var strokeColor: Color {
-        if cell.isHighlighted {
-            return .blue
-        } else if cell.isWrong {
-            return .red
-        } else if cell.isSelected {
-            return .green
+        if cell.isHighlighted || cell.isWrong || cell.isSelected {
+            return colors.cellBorderActive
         } else {
-            return Color(.systemGray4)
+            return colors.cellBorder
         }
     }
     

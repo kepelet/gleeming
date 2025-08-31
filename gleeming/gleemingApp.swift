@@ -9,9 +9,14 @@ import SwiftUI
 
 @main
 struct gleemingApp: App {
+    @StateObject private var themeManager = ThemeManager.shared
+    @ObservedObject private var gameSettings = GameSettings.shared
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.themeManager, themeManager)
+                .preferredColorScheme(themeManager.currentColorScheme)
         }
     }
 }
