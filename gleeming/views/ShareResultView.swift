@@ -11,6 +11,8 @@ struct ShareResultView: View {
     let gameScore: GameScore
     let difficultyMode: GameSettings.DifficultyMode
     @Environment(\.dismiss) private var dismiss
+    @State private var showingShareSheet = false
+    @State private var shareItems: [Any] = []
     
     var body: some View {
         VStack(spacing: 24) {
@@ -52,6 +54,9 @@ struct ShareResultView: View {
             Spacer()
         }
         .background(Color(.systemGroupedBackground))
+        .sheet(isPresented: $showingShareSheet) {
+            ShareSheet(items: shareItems)
+        }
     }
     
     private var resultCardView: some View {
@@ -102,24 +107,11 @@ struct ShareResultView: View {
     private func shareResult() {
         guard let image = generateResultImage() else { return }
         
-        let activityVC = UIActivityViewController(
-            activityItems: [image, "I just reached level \(gameScore.currentLevel) in Gleeming! 🧠 #MemoryTraining #Gleeming"],
-            applicationActivities: nil
-        )
-        
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first,
-           let rootVC = window.rootViewController {
-            
-            // For iPad
-            if let popover = activityVC.popoverPresentationController {
-                popover.sourceView = window
-                popover.sourceRect = CGRect(x: window.bounds.midX, y: window.bounds.midY, width: 0, height: 0)
-                popover.permittedArrowDirections = []
-            }
-            
-            rootVC.present(activityVC, animated: true)
-        }
+        shareItems = [
+            image,
+            "I just reached level \(gameScore.currentLevel) in Gleeming! 🧠 #MemoryTraining #Gleeming #BrainRot"
+        ]
+        showingShareSheet = true
     }
     
     private func generateResultImage() -> UIImage? {
@@ -205,6 +197,23 @@ struct ShareResultView: View {
                 .stroke(Color.blue.opacity(0.2), lineWidth: 2)
         )
         .clipShape(RoundedRectangle(cornerRadius: 20))
+    }
+}
+
+// MARK: - Share Sheet Wrapper
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+    
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let activityVC = UIActivityViewController(
+            activityItems: items,
+            applicationActivities: nil
+        )
+        return activityVC
+    }
+    
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
+        // No updates needed
     }
 }
 
