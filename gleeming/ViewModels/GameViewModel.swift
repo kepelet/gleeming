@@ -21,6 +21,7 @@ class GameViewModel: ObservableObject {
     private var configuration: GameConfiguration { gameSettings.createGameConfiguration() }
     private var showSequenceTask: Task<Void, Never>?
     private var baseSequence: [GridPosition] = [] // For progressive mode
+    private let hapticManager = HapticManager.shared
     
     init() {
         setupGrid()
@@ -58,6 +59,7 @@ class GameViewModel: ObservableObject {
         gameScore = GameScore()
         gameScore.currentSequenceLength = configuration.initialSequenceLength
         baseSequence = [] // Reset base sequence for progressive mode
+        hapticManager.gameStarted()
         startNewRound()
     }
     
@@ -132,6 +134,8 @@ class GameViewModel: ObservableObject {
         playerSequence = []
         currentSequenceIndex = 0
         
+        hapticManager.sequenceStarted()
+        
         showSequenceTask = Task {
             try? await Task.sleep(nanoseconds: UInt64(1_000_000_000))
             
@@ -169,6 +173,7 @@ class GameViewModel: ObservableObject {
         if playerSequence[currentSequenceIndex] != sequence[currentSequenceIndex] {
             // Wrong move - show red feedback
             gridCells[position.row][position.column].isWrong = true
+            hapticManager.wrongSelection()
             
             Task {
                 try? await Task.sleep(nanoseconds: UInt64(0.3 * 1_000_000_000))
@@ -181,6 +186,7 @@ class GameViewModel: ObservableObject {
         
         // Correct move - show green feedback
         gridCells[position.row][position.column].isSelected = true
+        hapticManager.correctSelection()
         
         Task {
             try? await Task.sleep(nanoseconds: UInt64(0.2 * 1_000_000_000))
@@ -199,6 +205,7 @@ class GameViewModel: ObservableObject {
     private func levelCompleted() {
         gameState = .waiting
         gameScore.incrementLevel()
+        hapticManager.levelCompleted()
         
         Task {
             try? await Task.sleep(nanoseconds: UInt64(1.5 * 1_000_000_000))
