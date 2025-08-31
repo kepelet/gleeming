@@ -22,6 +22,7 @@ class GameViewModel: ObservableObject {
     private var showSequenceTask: Task<Void, Never>?
     private var baseSequence: [GridPosition] = [] // For progressive mode
     private let hapticManager = HapticManager.shared
+    private let soundManager = SoundManager.shared
     
     init() {
         setupGrid()
@@ -72,6 +73,7 @@ class GameViewModel: ObservableObject {
     
     func resetGame() {
         showSequenceTask?.cancel()
+        soundManager.stopAllSounds()
         gameState = .ready
         resetGrid()
         sequence = []
@@ -143,6 +145,7 @@ class GameViewModel: ObservableObject {
                 if Task.isCancelled { return }
                 
                 gridCells[position.row][position.column].isHighlighted = true
+                soundManager.playNoteForGridPosition(position, gridSize: configuration.gridSize)
                 
                 try? await Task.sleep(nanoseconds: UInt64(configuration.showDuration * 1_000_000_000))
                 
@@ -187,6 +190,7 @@ class GameViewModel: ObservableObject {
         // Correct move - show green feedback
         gridCells[position.row][position.column].isSelected = true
         hapticManager.correctSelection()
+        soundManager.playNoteForGridPosition(position, gridSize: configuration.gridSize)
         
         Task {
             try? await Task.sleep(nanoseconds: UInt64(0.2 * 1_000_000_000))
