@@ -7,9 +7,24 @@
 
 import SwiftUI
 
+// MARK: - Settings View Wrapper for proper theme reactivity
+struct SettingsViewWrapper: View {
+    @Binding var isPresented: Bool
+    @StateObject private var themeManager = ThemeManager.shared
+    @ObservedObject private var gameSettings = GameSettings.shared
+    
+    var body: some View {
+        SettingsView(isPresented: $isPresented)
+            .environment(\.themeManager, themeManager)
+            .preferredColorScheme(themeManager.currentColorScheme)
+            .id(gameSettings.selectedTheme.rawValue)
+    }
+}
+
 struct SettingsView: View {
     @Binding var isPresented: Bool
     @ObservedObject var gameSettings = GameSettings.shared
+    @Environment(\.themeManager) private var themeManager
     @State private var showingGridSizePicker = false
     @State private var showingDifficultyPicker = false
     @State private var showingThemePicker = false
@@ -310,5 +325,5 @@ struct SettingsToggleRow: View {
 }
 
 #Preview {
-    SettingsView(isPresented: .constant(true))
+    SettingsViewWrapper(isPresented: .constant(true))
 }

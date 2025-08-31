@@ -84,7 +84,7 @@ struct WelcomeView: View {
         }
         .padding(.horizontal, 20)
         .sheet(isPresented: $showingSettings) {
-            SettingsView(isPresented: $showingSettings)
+            SettingsViewWrapper(isPresented: $showingSettings)
         }
     }
 }

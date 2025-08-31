@@ -65,7 +65,7 @@ struct GameView: View {
             Text("Final Score: \(viewModel.gameScore.totalScore)\nBest Streak: \(viewModel.gameScore.bestStreak)")
         }
         .sheet(isPresented: $showingSettings) {
-            SettingsView(isPresented: $showingSettings)
+            SettingsViewWrapper(isPresented: $showingSettings)
         }
         .sheet(isPresented: $showingShareResult) {
             ShareResultView(
