@@ -39,6 +39,11 @@ struct GameView: View {
             .padding(.horizontal, 20)
             .padding(.top, 20)
         }
+        .overlay(
+            // Confetti overlay
+            ConfettiView(isActive: viewModel.showConfetti)
+                .allowsHitTesting(false)
+        )
         .onChange(of: viewModel.gameState) { oldValue, newValue in
             if newValue == .gameOver {
                 showingGameOver = true

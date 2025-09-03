@@ -16,6 +16,7 @@ class GameViewModel: ObservableObject {
     @Published var sequence: [GridPosition] = []
     @Published var playerSequence: [GridPosition] = []
     @Published var currentSequenceIndex = 0
+    @Published var showConfetti = false
     
     private var gameSettings = GameSettings.shared
     private var configuration: GameConfiguration { gameSettings.createGameConfiguration() }
@@ -80,6 +81,7 @@ class GameViewModel: ObservableObject {
         playerSequence = []
         currentSequenceIndex = 0
         baseSequence = [] // Reset base sequence for progressive mode
+        showConfetti = false // Reset confetti state
     }
     
     // MARK: - Grid Management
@@ -210,6 +212,17 @@ class GameViewModel: ObservableObject {
         gameState = .waiting
         gameScore.incrementLevel()
         hapticManager.levelCompleted()
+        
+        // Check if confetti should be shown (every 3 levels)
+        if gameScore.currentLevel % 3 == 0 {
+            showConfetti = true
+            
+            // Hide confetti after 3 seconds
+            Task {
+                try? await Task.sleep(nanoseconds: UInt64(3.5 * 1_000_000_000))
+                showConfetti = false
+            }
+        }
         
         Task {
             try? await Task.sleep(nanoseconds: UInt64(1.5 * 1_000_000_000))
