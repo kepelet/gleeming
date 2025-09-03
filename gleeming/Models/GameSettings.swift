@@ -19,6 +19,7 @@ class GameSettings: ObservableObject {
     @Published var volume: Float = 0.8
     @Published var selectedTheme: Theme = .auto
     @Published var showDuration: Double = 0.6
+    @Published var timedModeEnabled: Bool = false
     
     static let shared = GameSettings()
     

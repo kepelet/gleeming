@@ -57,6 +57,8 @@ struct GameScore {
     var totalScore: Int = 0
     var streak: Int = 0
     var bestStreak: Int = 0
+    var timeRemaining: Double = 0.0
+    var isTimedMode: Bool = false
     
     mutating func incrementLevel() {
         currentLevel += 1
@@ -64,18 +66,30 @@ struct GameScore {
         streak += 1
         bestStreak = max(bestStreak, streak)
         totalScore += currentSequenceLength * 10
+        
+        // Update timer for timed mode
+        if isTimedMode {
+            timeRemaining = calculateTimerDuration(for: currentLevel)
+        }
     }
     
     mutating func resetStreak() {
         streak = 0
     }
     
+    // Calculate timer duration: 10 base seconds + 2 seconds per level
+    func calculateTimerDuration(for level: Int) -> Double {
+        return 10.0 + Double(level * 2)
+    }
+    
     // Convenience initializer for testing and previews
-    init(currentLevel: Int = 1, currentSequenceLength: Int = 3, totalScore: Int = 0, streak: Int = 0, bestStreak: Int = 0) {
+    init(currentLevel: Int = 1, currentSequenceLength: Int = 3, totalScore: Int = 0, streak: Int = 0, bestStreak: Int = 0, timeRemaining: Double = 0.0, isTimedMode: Bool = false) {
         self.currentLevel = currentLevel
         self.currentSequenceLength = currentSequenceLength
         self.totalScore = totalScore
         self.streak = streak
         self.bestStreak = bestStreak
+        self.timeRemaining = timeRemaining
+        self.isTimedMode = isTimedMode
     }
 }

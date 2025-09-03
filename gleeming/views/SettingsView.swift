@@ -151,6 +151,12 @@ struct SettingsView: View {
                 }
             )
             
+            SettingsToggleRow(
+                icon: "stopwatch",
+                title: "Timed Mode",
+                isOn: $gameSettings.timedModeEnabled
+            )
+            
             SettingsRow(
                 icon: "timer",
                 title: "Show Duration",

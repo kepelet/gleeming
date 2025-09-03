@@ -21,6 +21,7 @@ class GameViewModel: ObservableObject {
     private var gameSettings = GameSettings.shared
     private var configuration: GameConfiguration { gameSettings.createGameConfiguration() }
     private var showSequenceTask: Task<Void, Never>?
+    private var timerTask: Task<Void, Never>?
     private var baseSequence: [GridPosition] = [] // For progressive mode
     private let hapticManager = HapticManager.shared
     private let soundManager = SoundManager.shared
@@ -60,6 +61,13 @@ class GameViewModel: ObservableObject {
     func startNewGame() {
         gameScore = GameScore()
         gameScore.currentSequenceLength = configuration.initialSequenceLength
+        gameScore.isTimedMode = gameSettings.timedModeEnabled
+        
+        // Initialize timer for timed mode
+        if gameSettings.timedModeEnabled {
+            gameScore.timeRemaining = gameScore.calculateTimerDuration(for: gameScore.currentLevel)
+        }
+        
         baseSequence = [] // Reset base sequence for progressive mode
         hapticManager.gameStarted()
         startNewRound()
@@ -74,6 +82,7 @@ class GameViewModel: ObservableObject {
     
     func resetGame() {
         showSequenceTask?.cancel()
+        timerTask?.cancel()
         soundManager.stopAllSounds()
         gameState = .ready
         resetGrid()
@@ -164,6 +173,11 @@ class GameViewModel: ObservableObject {
                 // Wait a bit before allowing player input
                 try? await Task.sleep(nanoseconds: UInt64(0.5 * 1_000_000_000))
                 gameState = .playing
+                
+                // Start timer for timed mode
+                if gameScore.isTimedMode {
+                    startTimer()
+                }
             }
         }
     }
@@ -210,6 +224,7 @@ class GameViewModel: ObservableObject {
     // MARK: - Game Events
     private func levelCompleted() {
         gameState = .waiting
+        stopTimer() // Stop the current timer
         gameScore.incrementLevel()
         hapticManager.levelCompleted()
         
@@ -236,6 +251,7 @@ class GameViewModel: ObservableObject {
         gameState = .gameOver
         gameScore.resetStreak()
         showSequenceTask?.cancel()
+        timerTask?.cancel()
         
         Task {
             for position in sequence {
@@ -244,5 +260,35 @@ class GameViewModel: ObservableObject {
             try? await Task.sleep(nanoseconds: UInt64(2.0 * 1_000_000_000))
             resetGrid()
         }
+    }
+    
+    // MARK: - Timer Management
+    private func startTimer() {
+        timerTask?.cancel()
+        
+        timerTask = Task {
+            while gameScore.timeRemaining > 0 && gameState == .playing && !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 100_000_000) // Update every 0.1 seconds
+                
+                if !Task.isCancelled && gameState == .playing {
+                    gameScore.timeRemaining = max(0, gameScore.timeRemaining - 0.1)
+                    
+                    // Check for time warnings
+                    if gameScore.timeRemaining <= 3.0 && gameScore.timeRemaining > 2.9 {
+                        // 3 seconds left - warning haptic
+                        hapticManager.sequenceStarted()
+                    }
+                }
+            }
+            
+            // Time's up!
+            if gameScore.timeRemaining <= 0 && gameState == .playing && !Task.isCancelled {
+                gameOver()
+            }
+        }
+    }
+    
+    private func stopTimer() {
+        timerTask?.cancel()
     }
 }

@@ -85,7 +85,7 @@ struct ShareResultView: View {
                 ResultRow(title: "Level Reached", value: "\(gameScore.currentLevel)")
                 ResultRow(title: "Total Score", value: "\(gameScore.totalScore)")
                 ResultRow(title: "Best Streak", value: "\(gameScore.bestStreak)")
-                ResultRow(title: "Game Mode", value: difficultyMode.displayName)
+                ResultRow(title: "Game Mode", value: gameMode)
             }
             
             Spacer().frame(height: 10)
@@ -109,7 +109,7 @@ struct ShareResultView: View {
         
         shareItems = [
             image,
-            "I just reached level \(gameScore.currentLevel) in Gleeming! 🧠 #MemoryTraining #Gleeming #BrainRot"
+            shareText
         ]
         showingShareSheet = true
     }
@@ -168,7 +168,7 @@ struct ShareResultView: View {
                 ShareResultRow(title: "Level Reached", value: "\(gameScore.currentLevel)")
                 ShareResultRow(title: "Total Score", value: "\(gameScore.totalScore)")
                 ShareResultRow(title: "Best Streak", value: "\(gameScore.bestStreak)")
-                ShareResultRow(title: "Difficulty", value: difficultyMode.displayName)
+                ShareResultRow(title: "Game Mode", value: gameMode)
             }
             
             // Footer with gradient background
@@ -197,6 +197,20 @@ struct ShareResultView: View {
                 .stroke(Color.blue.opacity(0.2), lineWidth: 2)
         )
         .clipShape(RoundedRectangle(cornerRadius: 20))
+    }
+    
+    // MARK: - Helper Properties
+    private var gameMode: String {
+        if gameScore.isTimedMode {
+            return "\(difficultyMode.displayName) • Timed"
+        } else {
+            return difficultyMode.displayName
+        }
+    }
+    
+    private var shareText: String {
+        let modeText = gameScore.isTimedMode ? "timed mode" : "standard mode"
+        return "I just reached level \(gameScore.currentLevel) in Gleeming (\(modeText))! 🧠⏱️ #MemoryTraining #Gleeming #BrainChallenge"
     }
 }
 
@@ -264,7 +278,9 @@ struct ShareResultRow: View {
             currentSequenceLength: 17,
             totalScore: 1250,
             streak: 0,
-            bestStreak: 12
+            bestStreak: 12,
+            timeRemaining: 0.0,
+            isTimedMode: true
         ),
         difficultyMode: .random
     )

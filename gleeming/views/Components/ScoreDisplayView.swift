@@ -12,10 +12,20 @@ struct ScoreDisplayView: View {
     let gameState: GameState
     
     var body: some View {
-        HStack(spacing: 24) {
-            ScoreItem(title: "Level", value: "\(score.currentLevel)")
-            ScoreItem(title: "Score", value: "\(score.totalScore)")
-            ScoreItem(title: "Streak", value: "\(score.streak)")
+        VStack(spacing: 8) {
+            HStack(spacing: 24) {
+                ScoreItem(title: "Level", value: "\(score.currentLevel)")
+                ScoreItem(title: "Score", value: "\(score.totalScore)")
+                ScoreItem(title: "Streak", value: "\(score.streak)")
+            }
+            
+            // Timer display for timed mode
+            if score.isTimedMode {
+                TimerDisplayView(
+                    timeRemaining: score.timeRemaining,
+                    isTimedMode: score.isTimedMode
+                )
+            }
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
@@ -56,7 +66,9 @@ struct ScoreItem: View {
                 currentSequenceLength: 7,
                 totalScore: 350,
                 streak: 4,
-                bestStreak: 8
+                bestStreak: 8,
+                timeRemaining: 18.5,
+                isTimedMode: true
             ),
             gameState: .playing
         )
