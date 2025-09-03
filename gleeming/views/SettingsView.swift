@@ -157,12 +157,13 @@ struct SettingsView: View {
                 isOn: $gameSettings.timedModeEnabled
             )
             
-            SettingsRow(
-                icon: "timer",
-                title: "Show Duration",
-                subtitle: gameSettings.showDurationDisplay,
-                action: {}
-            )
+            // TODO: Implement show duration adjustment
+            // SettingsRow(
+            //     icon: "timer",
+            //     title: "Show Duration",
+            //     subtitle: gameSettings.showDurationDisplay,
+            //     action: {}
+            // )
         }
     }
     
@@ -173,12 +174,14 @@ struct SettingsView: View {
                 title: "Sound Effects",
                 isOn: $gameSettings.soundEffectsEnabled
             )
-            
-            SettingsToggleRow(
-                icon: "music.note",
-                title: "Background Music",
-                isOn: $gameSettings.backgroundMusicEnabled
-            )
+
+            // TODO: Implement background music
+            // SettingsToggleRow(
+            //     icon: "music.note",
+            //     title: "Background Music",
+            //     isOn: $gameSettings.backgroundMusicEnabled
+            // )
+
             
             SettingsRow(
                 icon: "speaker.3",
