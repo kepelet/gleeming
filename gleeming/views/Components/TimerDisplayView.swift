@@ -37,13 +37,8 @@ struct TimerDisplayView: View {
     private var timeString: String {
         let minutes = Int(timeRemaining) / 60
         let seconds = Int(timeRemaining) % 60
-        let tenths = Int((timeRemaining.truncatingRemainder(dividingBy: 1)) * 10)
         
-        if minutes > 0 {
-            return String(format: "%d:%02d", minutes, seconds)
-        } else {
-            return String(format: "%d.%d", seconds, tenths)
-        }
+        return String(format: "%d:%02d", minutes, seconds)
     }
     
     private var timerColor: Color {
@@ -69,9 +64,9 @@ struct TimerDisplayView: View {
 
 #Preview {
     VStack(spacing: 20) {
-        TimerDisplayView(timeRemaining: 25.7, isTimedMode: true)
-        TimerDisplayView(timeRemaining: 8.3, isTimedMode: true)
-        TimerDisplayView(timeRemaining: 2.1, isTimedMode: true)
+        TimerDisplayView(timeRemaining: 125.7, isTimedMode: true)
+        TimerDisplayView(timeRemaining: 68.3, isTimedMode: true)
+        TimerDisplayView(timeRemaining: 12.1, isTimedMode: true)
         TimerDisplayView(timeRemaining: 15.0, isTimedMode: false)
     }
     .padding()
