@@ -8,12 +8,13 @@
 import Foundation
 import AVFoundation
 
-class SoundManager {
+class SoundManager: ObservableObject {
     static let shared = SoundManager()
     
     private var audioEngine = AVAudioEngine()
     private var playerNodes: [AVAudioPlayerNode] = []
     private var isEngineRunning = false
+    @Published private var gameSettings = GameSettings.shared
     
     // Musical note frequencies (in Hz) for a pentatonic scale
     private let noteFrequencies: [Double] = [
@@ -88,7 +89,7 @@ class SoundManager {
         #if targetEnvironment(simulator)
         print("Simulator - would play note \(frequency)Hz for grid position (\(position.row), \(position.column))")
         #else
-        playTone(frequency: frequency, duration: 0.3, volume: GameSettings.shared.volume)
+        playTone(frequency: frequency, duration: 0.3, volume: gameSettings.volume)
         #endif
     }
     

@@ -28,6 +28,7 @@ struct SettingsView: View {
     @State private var showingGridSizePicker = false
     @State private var showingDifficultyPicker = false
     @State private var showingThemePicker = false
+    @State private var showingVolumeSlider = false
     
     var body: some View {
         NavigationView {
@@ -98,6 +99,11 @@ struct SettingsView: View {
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("Auto: Follows system appearance\nLight: Always light mode\nDark: Always dark mode")
+        }
+        .sheet(isPresented: $showingVolumeSlider) {
+            VolumeAdjustmentView(isPresented: $showingVolumeSlider)
+                .presentationDetents([.height(200)])
+                .presentationDragIndicator(.visible)
         }
     }
     
@@ -172,7 +178,7 @@ struct SettingsView: View {
                 icon: "speaker.3",
                 title: "Volume",
                 subtitle: gameSettings.volumeDisplay,
-                action: {}
+                action: { showingVolumeSlider = true }
             )
         }
     }
@@ -321,6 +327,81 @@ struct SettingsToggleRow: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+    }
+}
+
+// MARK: - Volume Adjustment View
+
+struct VolumeAdjustmentView: View {
+    @Binding var isPresented: Bool
+    @ObservedObject private var gameSettings = GameSettings.shared
+    @State private var testSoundTimer: Timer?
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            // Header
+            HStack {
+                Button("Done") {
+                    testSoundTimer?.invalidate()
+                    isPresented = false
+                }
+                .font(.headline)
+                .foregroundColor(.blue)
+                
+                Spacer()
+                
+                Text("Volume")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+                
+                // Invisible button for balance
+                Button("Done") {
+                    isPresented = false
+                }
+                .hidden()
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            
+            // Volume Slider
+            VStack(spacing: 16) {
+                HStack {
+                    Image(systemName: "speaker.1")
+                        .foregroundColor(.secondary)
+                    
+                    Slider(value: $gameSettings.volume, in: 0...1) { editing in
+                        if !editing {
+                            gameSettings.saveSettings()
+                            // Play test sound when user stops dragging
+                            playTestSound()
+                        }
+                    }
+                    
+                    Image(systemName: "speaker.3")
+                        .foregroundColor(.secondary)
+                }
+                
+                Text("\(Int(gameSettings.volume * 100))%")
+                    .font(.title3)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+            }
+            .padding(.horizontal, 20)
+            
+            Spacer()
+        }
+        .background(Color(.systemBackground))
+        .onDisappear {
+            testSoundTimer?.invalidate()
+        }
+    }
+    
+    private func playTestSound() {
+        // Play a test note to preview volume
+        let position = GridPosition(row: 0, column: 0)
+        SoundManager.shared.playNoteForGridPosition(position, gridSize: 4)
     }
 }
 
