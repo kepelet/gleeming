@@ -213,8 +213,8 @@ class GameViewModel: ObservableObject {
         gameScore.incrementLevel()
         hapticManager.levelCompleted()
         
-        // Check if confetti should be shown (every 3 levels)
-        if gameScore.currentLevel % 3 == 0 {
+        // Check if confetti should be shown (every 3 levels and confetti enabled)
+        if gameScore.currentLevel % 3 == 0 && gameSettings.confettiEnabled {
             showConfetti = true
             
             // Hide confetti after 3 seconds

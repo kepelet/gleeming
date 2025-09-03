@@ -180,9 +180,9 @@ struct SettingsView: View {
     private var visualSettingsSection: some View {
         SettingsSection(title: "Visual") {
             SettingsToggleRow(
-                icon: "wand.and.rays",
-                title: "Animations",
-                isOn: $gameSettings.animationsEnabled
+                icon: "sparkles",
+                title: "Confetti",
+                isOn: $gameSettings.confettiEnabled
             )
             
             SettingsToggleRow(

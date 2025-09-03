@@ -14,7 +14,7 @@ class GameSettings: ObservableObject {
     @Published var difficultyMode: DifficultyMode = .random
     @Published var soundEffectsEnabled: Bool = true
     @Published var backgroundMusicEnabled: Bool = false
-    @Published var animationsEnabled: Bool = true
+    @Published var confettiEnabled: Bool = true
     @Published var hapticFeedbackEnabled: Bool = true
     @Published var volume: Float = 0.8
     @Published var selectedTheme: Theme = .auto
