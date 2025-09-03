@@ -135,7 +135,7 @@ struct SettingsView: View {
         SettingsSection(title: "Game") {
             SettingsRow(
                 icon: "gamecontroller",
-                title: "Difficulty",
+                title: "Game Mode",
                 subtitle: gameSettings.difficultyMode.displayName,
                 action: {
                     showingDifficultyPicker = true

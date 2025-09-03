@@ -96,7 +96,6 @@ class SoundManager: ObservableObject {
     private func getNoteIndexForPosition(_ position: GridPosition, gridSize: Int) -> Int {
         // Create a mapping from grid position to note index
         // This creates a pleasant musical pattern across the grid
-        let totalCells = gridSize * gridSize
         let cellIndex = position.row * gridSize + position.column
         
         // Map to available notes, cycling through the pentatonic scale
