@@ -1,0 +1,7 @@
+git_url("git@github.com:kepelet/match.git")
+
+storage_mode("git")
+
+type("development")
+
+username(ENV["APPLE_ID"])
