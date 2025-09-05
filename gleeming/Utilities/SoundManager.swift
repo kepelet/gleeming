@@ -108,30 +108,45 @@ class SoundManager: ObservableObject {
             print("No available player nodes")
             return
         }
-        
+
         let sampleRate = 44100.0
         let frameCount = AVAudioFrameCount(sampleRate * duration)
-        
+
         guard let buffer = AVAudioPCMBuffer(pcmFormat: audioEngine.mainMixerNode.outputFormat(forBus: 0), frameCapacity: frameCount) else {
             print("Failed to create audio buffer")
             return
         }
-        
+
         buffer.frameLength = frameCount
-        
-        // Generate sine wave
+
+        // Envelope parameters
+        let attackTime = 0.015 // 15 ms
+        let releaseTime = 0.04 // 40 ms
+        let attackFrames = Int(sampleRate * attackTime)
+        let releaseFrames = Int(sampleRate * releaseTime)
+        let sustainFrames = max(0, Int(frameCount) - attackFrames - releaseFrames)
+
         let channelCount = Int(buffer.format.channelCount)
         for channel in 0..<channelCount {
             let channelData = buffer.floatChannelData![channel]
             for frame in 0..<Int(frameCount) {
                 let time = Double(frame) / sampleRate
-                let sample = Float(sin(2.0 * Double.pi * frequency * time)) * volume * 0.3 // Reduced volume
+                // Sine wave
+                var sample = Float(sin(2.0 * Double.pi * frequency * time))
+                // Envelope
+                var env: Float = 1.0
+                if frame < attackFrames {
+                    env = Float(frame) / Float(attackFrames)
+                } else if frame >= attackFrames + sustainFrames {
+                    env = Float(Int(frameCount) - frame) / Float(releaseFrames)
+                }
+                sample *= env * volume * 0.35 // Slightly warmer, a bit louder
                 channelData[frame] = sample
             }
         }
-        
+
         playerNode.scheduleBuffer(buffer, at: nil, options: [], completionHandler: nil)
-        
+
         if !playerNode.isPlaying {
             playerNode.play()
         }
