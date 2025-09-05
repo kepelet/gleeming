@@ -13,6 +13,7 @@ struct ShareResultView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingShareSheet = false
     @State private var shareItems: [Any] = []
+    @State private var isViewReady = false
     
     var body: some View {
         VStack(spacing: 24) {
@@ -23,15 +24,15 @@ struct ShareResultView: View {
                 }
                 .font(.headline)
                 .foregroundColor(.blue)
-                
+
                 Spacer()
-                
+
                 Text("Share Result")
                     .font(.title2)
                     .fontWeight(.semibold)
-                
+
                 Spacer()
-                
+
                 // Balance for symmetry
                 Text("Cancel")
                     .font(.headline)
@@ -39,23 +40,30 @@ struct ShareResultView: View {
             }
             .padding(.horizontal, 20)
             .padding(.top, 20)
-            
+
             // Result card preview
             resultCardView
                 .padding(.horizontal, 20)
-            
+
             // Share button
             Button("Share Image") {
                 shareResult()
             }
             .buttonStyle(PrimaryButtonStyle())
             .padding(.horizontal, 40)
-            
+            .disabled(!isViewReady)
+
             Spacer()
         }
         .background(Color(.systemGroupedBackground))
         .sheet(isPresented: $showingShareSheet) {
             ShareSheet(items: shareItems)
+        }
+        .onAppear {
+            // Allow the view to finish layout before enabling sharing
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                isViewReady = true
+            }
         }
     }
     
@@ -105,13 +113,18 @@ struct ShareResultView: View {
     }
     
     private func shareResult() {
-        guard let image = generateResultImage() else { return }
-        
-        shareItems = [
-            image,
-            shareText
-        ]
-        showingShareSheet = true
+        // Add a slight delay to ensure the view is fully rendered
+        isViewReady = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.10) {
+            let image = generateResultImage()
+            isViewReady = true
+            guard let image else { return }
+            shareItems = [
+                image,
+                shareText
+            ]
+            showingShareSheet = true
+        }
     }
     
     private func generateResultImage() -> UIImage? {
