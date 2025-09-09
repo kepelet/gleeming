@@ -17,6 +17,8 @@ class GameViewModel: ObservableObject {
     @Published var playerSequence: [GridPosition] = []
     @Published var currentSequenceIndex = 0
     @Published var showConfetti = false
+    @Published var showMistakeMessage = false
+    @Published var mistakeMessage = ""
     
     private var gameSettings = GameSettings.shared
     private var configuration: GameConfiguration { gameSettings.createGameConfiguration() }
@@ -62,6 +64,7 @@ class GameViewModel: ObservableObject {
         gameScore = GameScore()
         gameScore.currentSequenceLength = configuration.initialSequenceLength
         gameScore.isTimedMode = gameSettings.timedModeEnabled
+        gameScore.resetLives()
         
         // Initialize timer for timed mode
         if gameSettings.timedModeEnabled {
@@ -91,6 +94,8 @@ class GameViewModel: ObservableObject {
         currentSequenceIndex = 0
         baseSequence = [] // Reset base sequence for progressive mode
         showConfetti = false // Reset confetti state
+        showMistakeMessage = false // Reset mistake message
+        mistakeMessage = ""
     }
     
     // MARK: - Grid Management
@@ -199,7 +204,7 @@ class GameViewModel: ObservableObject {
                 gridCells[position.row][position.column].isWrong = false
             }
             
-            gameOver()
+            handleWrongMove()
             return
         }
         
@@ -244,6 +249,57 @@ class GameViewModel: ObservableObject {
             if gameState == .waiting {
                 startNewRound()
             }
+        }
+    }
+    
+    private func handleWrongMove() {
+        // If forgiving mode is disabled, go straight to game over
+        if !gameSettings.forgivingModeEnabled {
+            gameOver()
+            return
+        }
+        
+        let previousScore = gameScore.totalScore
+        gameScore.makeMistake()
+        
+        // Show mistake feedback
+        if gameScore.isOutOfLives {
+            mistakeMessage = "Game Over! No lives remaining"
+        } else if gameScore.totalScore == 0 && previousScore == 0 {
+            mistakeMessage = "Try again! No penalty for beginners"
+        } else {
+            let penalty = previousScore - gameScore.totalScore
+            mistakeMessage = "Oops! Lost \(penalty) points. \(gameScore.lives) ❤️ remaining"
+        }
+        
+        showMistakeMessage = true
+        
+        Task {
+            try? await Task.sleep(nanoseconds: UInt64(2.0 * 1_000_000_000))
+            showMistakeMessage = false
+        }
+        
+        // Check if game should end
+        if gameScore.shouldGameOver {
+            Task {
+                try? await Task.sleep(nanoseconds: UInt64(2.0 * 1_000_000_000))
+                gameOver()
+            }
+        } else {
+            // Allow player to continue - reset current attempt
+            retryCurrentSequence()
+        }
+    }
+    
+    private func retryCurrentSequence() {
+        // Reset player sequence to try again
+        playerSequence = []
+        currentSequenceIndex = 0
+        
+        // Brief pause then allow player to continue
+        Task {
+            try? await Task.sleep(nanoseconds: UInt64(0.5 * 1_000_000_000))
+            // Player can continue tapping
         }
     }
     

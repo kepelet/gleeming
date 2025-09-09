@@ -119,9 +119,17 @@ struct GameView: View {
     
     private var gameStatusView: some View {
         VStack(spacing: 8) {
-            Text(statusText)
-                .font(.headline)
-                .foregroundColor(statusColor)
+            if viewModel.showMistakeMessage {
+                Text(viewModel.mistakeMessage)
+                    .font(.headline)
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+                    .transition(.opacity.combined(with: .scale))
+            } else {
+                Text(statusText)
+                    .font(.headline)
+                    .foregroundColor(statusColor)
+            }
             
             if viewModel.gameState == .showing || viewModel.gameState == .playing {
                 Text("Sequence Length: \(viewModel.gameScore.currentSequenceLength)")
@@ -130,6 +138,7 @@ struct GameView: View {
             }
         }
         .frame(height: 60)
+        .animation(.easeInOut(duration: 0.3), value: viewModel.showMistakeMessage)
     }
     
     private func gameGridSection(geometry: GeometryProxy) -> some View {

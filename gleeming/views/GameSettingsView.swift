@@ -80,6 +80,20 @@ struct GameSettingsView: View {
                             gameSettings.saveSettings()
                         }
                     )
+                    
+                    GameSettingToggleCard(
+                        icon: "heart.fill",
+                        title: "Forgiving Mode",
+                        subtitle: gameSettings.forgivingModeEnabled ? "On" : "Off",
+                        description: gameSettings.forgivingModeEnabled ? 
+                            "Get 3 lives and continue playing after mistakes" : 
+                            "Classic mode - one mistake ends the game",
+                        color: .pink,
+                        isOn: $gameSettings.forgivingModeEnabled,
+                        onToggle: {
+                            gameSettings.saveSettings()
+                        }
+                    )
                 }
                 .padding(.horizontal, 24)
                 

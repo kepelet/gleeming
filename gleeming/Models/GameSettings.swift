@@ -20,6 +20,7 @@ class GameSettings: ObservableObject {
     @Published var selectedTheme: Theme = .auto
     @Published var showDuration: Double = 0.6
     @Published var timedModeEnabled: Bool = false
+    @Published var forgivingModeEnabled: Bool = true
     
     static let shared = GameSettings()
     
