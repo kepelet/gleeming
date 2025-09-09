@@ -13,64 +13,71 @@ struct WelcomeView: View {
     @State private var showingGameModeSelection = false
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Header with settings button
-                HStack {
-                    Spacer()
-                    Button(action: {
-                        showingSettings = true
-                    }) {
-                        Image(systemName: "gearshape")
-                            .font(.title2)
-                            .foregroundColor(.blue)
-                    }
+        VStack(spacing: 0) {
+            // Header with settings button
+            HStack {
+                Spacer()
+                Button(action: {
+                    showingSettings = true
+                }) {
+                    Image(systemName: "gearshape")
+                        .font(.title2)
+                        .foregroundColor(.blue)
                 }
-                .padding(.top, 10)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 10)
+            
+            // Main content area - centered
+            VStack(spacing: 24) {
+                Spacer()
                 
-                // App branding - more compact
-                VStack(spacing: 12) {
+                // App branding - larger
+                VStack(spacing: 16) {
                     Image(systemName: "brain.head.profile")
-                        .font(.system(size: 60))
+                        .font(.system(size: 80))
                         .foregroundColor(.blue)
                     
-                    VStack(spacing: 4) {
+                    VStack(spacing: 6) {
                         Text("Gleeming")
-                            .font(.title)
+                            .font(.largeTitle)
                             .fontWeight(.bold)
                             .foregroundColor(.primary)
                         
                         Text("Train your memory")
-                            .font(.subheadline)
+                            .font(.title2)
                             .foregroundColor(.secondary)
                     }
                 }
                 
-                // Conditional content based on user experience
+                Spacer()
+                
+                // Conditional content based on user experience - centered
                 if UserStats.shared.hasAnyStats {
                     // Experienced user: Show stats + compact instructions
                     UserStatsView()
                     
-                    VStack(spacing: 12) {
+                    VStack(spacing: 16) {
                         Text("How to Play")
-                            .font(.headline)
+                            .font(.title2)
+                            .fontWeight(.semibold)
                             .foregroundColor(.primary)
                         
-                        HStack(spacing: 20) {
+                        HStack(spacing: 24) {
                             CompactHowToPlayItem(icon: "eye", text: "Watch")
                             CompactHowToPlayItem(icon: "hand.tap", text: "Repeat")
                             CompactHowToPlayItem(icon: "arrow.up", text: "Level up")
                         }
                     }
-                    .padding(.vertical, 8)
                 } else {
                     // New user: Show detailed instructions
-                    VStack(spacing: 16) {
+                    VStack(spacing: 20) {
                         Text("How to Play")
-                            .font(.headline)
+                            .font(.title2)
+                            .fontWeight(.semibold)
                             .foregroundColor(.primary)
                         
-                        VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 16) {
                             HowToPlayItem(
                                 icon: "eye",
                                 text: "Watch the pattern carefully"
@@ -89,8 +96,9 @@ struct WelcomeView: View {
                             )
                         }
                     }
-                    .padding(.horizontal, 20)
                 }
+                
+                Spacer()
                 
                 // Start button
                 Button("Start Playing") {
@@ -98,7 +106,7 @@ struct WelcomeView: View {
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 
-                Spacer(minLength: 20)
+                Spacer()
             }
             .padding(.horizontal, 20)
         }
@@ -116,14 +124,14 @@ struct HowToPlayItem: View {
     let text: String
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 16) {
             Image(systemName: icon)
-                .font(.title3)
+                .font(.title2)
                 .foregroundColor(.blue)
-                .frame(width: 24)
+                .frame(width: 28)
             
             Text(text)
-                .font(.body)
+                .font(.title3)
                 .foregroundColor(.primary)
             
             Spacer()
@@ -136,18 +144,18 @@ struct CompactHowToPlayItem: View {
     let text: String
     
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
             Image(systemName: icon)
-                .font(.title2)
+                .font(.title)
                 .foregroundColor(.blue)
-                .frame(width: 30, height: 30)
+                .frame(width: 40, height: 40)
                 .background(
                     Circle()
                         .fill(Color.blue.opacity(0.1))
                 )
             
             Text(text)
-                .font(.caption)
+                .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
         }
