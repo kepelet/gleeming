@@ -125,13 +125,72 @@ class GameSettings: ObservableObject {
         return "\(String(format: "%.1f", showDuration)) seconds"
     }
     
-    // MARK: - Persistence (placeholder for future UserDefaults implementation)
+    // MARK: - Persistence
     private func loadSettings() {
-        // TODO: Load from UserDefaults
+        let defaults = UserDefaults.standard
+        
+        if let difficultyRawValue = defaults.object(forKey: "difficultyMode") as? String,
+           let difficulty = DifficultyMode(rawValue: difficultyRawValue) {
+            difficultyMode = difficulty
+        }
+        
+        let gridSizeValue = defaults.integer(forKey: "gridSize")
+        if gridSizeValue != 0 {
+            _gridSize = gridSizeValue
+        }
+        
+        if defaults.object(forKey: "soundEffectsEnabled") != nil {
+            soundEffectsEnabled = defaults.bool(forKey: "soundEffectsEnabled")
+        }
+        
+        if defaults.object(forKey: "backgroundMusicEnabled") != nil {
+            backgroundMusicEnabled = defaults.bool(forKey: "backgroundMusicEnabled")
+        }
+        
+        if defaults.object(forKey: "confettiEnabled") != nil {
+            confettiEnabled = defaults.bool(forKey: "confettiEnabled")
+        }
+        
+        if defaults.object(forKey: "hapticFeedbackEnabled") != nil {
+            hapticFeedbackEnabled = defaults.bool(forKey: "hapticFeedbackEnabled")
+        }
+        
+        if defaults.object(forKey: "volume") != nil {
+            volume = defaults.float(forKey: "volume")
+        }
+        
+        if let themeRawValue = defaults.object(forKey: "selectedTheme") as? String,
+           let theme = Theme(rawValue: themeRawValue) {
+            selectedTheme = theme
+        }
+        
+        if defaults.object(forKey: "showDuration") != nil {
+            showDuration = defaults.double(forKey: "showDuration")
+        }
+        
+        if defaults.object(forKey: "timedModeEnabled") != nil {
+            timedModeEnabled = defaults.bool(forKey: "timedModeEnabled")
+        }
+        
+        if defaults.object(forKey: "forgivingModeEnabled") != nil {
+            forgivingModeEnabled = defaults.bool(forKey: "forgivingModeEnabled")
+        }
     }
     
     func saveSettings() {
-        // TODO: Save to UserDefaults
+        let defaults = UserDefaults.standard
+        
+        defaults.set(difficultyMode.rawValue, forKey: "difficultyMode")
+        defaults.set(_gridSize, forKey: "gridSize")
+        defaults.set(soundEffectsEnabled, forKey: "soundEffectsEnabled")
+        defaults.set(backgroundMusicEnabled, forKey: "backgroundMusicEnabled")
+        defaults.set(confettiEnabled, forKey: "confettiEnabled")
+        defaults.set(hapticFeedbackEnabled, forKey: "hapticFeedbackEnabled")
+        defaults.set(volume, forKey: "volume")
+        defaults.set(selectedTheme.rawValue, forKey: "selectedTheme")
+        defaults.set(showDuration, forKey: "showDuration")
+        defaults.set(timedModeEnabled, forKey: "timedModeEnabled")
+        defaults.set(forgivingModeEnabled, forKey: "forgivingModeEnabled")
     }
     
     // MARK: - Configuration Generation

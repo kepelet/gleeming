@@ -20,7 +20,10 @@ class GameViewModel: ObservableObject {
     @Published var showMistakeMessage = false
     @Published var mistakeMessage = ""
     
+    private var gameStartTime: Date?
+    
     private var gameSettings = GameSettings.shared
+    private var userStats = UserStats.shared
     private var configuration: GameConfiguration { gameSettings.createGameConfiguration() }
     private var showSequenceTask: Task<Void, Never>?
     private var timerTask: Task<Void, Never>?
@@ -65,6 +68,7 @@ class GameViewModel: ObservableObject {
         gameScore.currentSequenceLength = configuration.initialSequenceLength
         gameScore.isTimedMode = gameSettings.timedModeEnabled
         gameScore.resetLives()
+        gameStartTime = Date() // Track when game started
         
         // Initialize timer for timed mode
         if gameSettings.timedModeEnabled {
@@ -308,6 +312,15 @@ class GameViewModel: ObservableObject {
         gameScore.resetStreak()
         showSequenceTask?.cancel()
         timerTask?.cancel()
+        
+        // Update user stats
+        userStats.updateStats(from: gameScore)
+        
+        // Track play time
+        if let startTime = gameStartTime {
+            let playDuration = Date().timeIntervalSince(startTime)
+            userStats.addPlayTime(playDuration)
+        }
         
         Task {
             for position in sequence {
