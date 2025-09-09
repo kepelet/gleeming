@@ -10,6 +10,7 @@ import SwiftUI
 struct WelcomeView: View {
     @Binding var showGame: Bool
     @State private var showingSettings = false
+    @State private var showingGameModeSelection = false
     
     var body: some View {
         VStack(spacing: 32) {
@@ -76,7 +77,7 @@ struct WelcomeView: View {
             
             // Start button
             Button("Start Playing") {
-                showGame = true
+                showingGameModeSelection = true
             }
             .buttonStyle(PrimaryButtonStyle())
             
@@ -85,6 +86,9 @@ struct WelcomeView: View {
         .padding(.horizontal, 20)
         .sheet(isPresented: $showingSettings) {
             SettingsViewWrapper(isPresented: $showingSettings)
+        }
+        .sheet(isPresented: $showingGameModeSelection) {
+            GameModeSelectionViewWrapper(showGame: $showGame)
         }
     }
 }

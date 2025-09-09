@@ -25,8 +25,6 @@ struct SettingsView: View {
     @Binding var isPresented: Bool
     @ObservedObject var gameSettings = GameSettings.shared
     @Environment(\.themeManager) private var themeManager
-    @State private var showingGridSizePicker = false
-    @State private var showingDifficultyPicker = false
     @State private var showingThemePicker = false
     @State private var showingVolumeSlider = false
     
@@ -39,7 +37,6 @@ struct SettingsView: View {
                 // Settings sections
                 ScrollView {
                     VStack(spacing: 20) {
-                        gameSettingsSection
                         audioSettingsSection
                         visualSettingsSection
                         aboutSection
@@ -54,37 +51,7 @@ struct SettingsView: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
-        .confirmationDialog("Select Grid Size", isPresented: $showingGridSizePicker) {
-            ForEach(gameSettings.availableGridSizes, id: \.self) { size in
-                let sizeDisplay = "\(size)×\(size)"
-                let isSelected = size == gameSettings.gridSize
-                let title = isSelected ? "✓ \(sizeDisplay)" : sizeDisplay
-                
-                Button(title) {
-                    gameSettings.gridSize = size
-                    gameSettings.saveSettings()
-                }
-            }
-            
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("Choose the grid size for your game")
-        }
-        .confirmationDialog("Select Difficulty Mode", isPresented: $showingDifficultyPicker) {
-            ForEach(GameSettings.DifficultyMode.allCases, id: \.self) { mode in
-                let isSelected = mode == gameSettings.difficultyMode
-                let title = isSelected ? "✓ \(mode.displayName)" : mode.displayName
-                
-                Button(title) {
-                    gameSettings.difficultyMode = mode
-                    gameSettings.saveSettings()
-                }
-            }
-            
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("Random: New pattern each level\nProgressive: Each level adds one step")
-        }
+
         .confirmationDialog("Select Theme", isPresented: $showingThemePicker) {
             ForEach(GameSettings.Theme.allCases, id: \.self) { theme in
                 let isSelected = theme == gameSettings.selectedTheme
@@ -129,42 +96,6 @@ struct SettingsView: View {
         }
         .padding(.horizontal, 20)
         .padding(.top, 20)
-    }
-    
-    private var gameSettingsSection: some View {
-        SettingsSection(title: "Game") {
-            SettingsRow(
-                icon: "gamecontroller",
-                title: "Game Mode",
-                subtitle: gameSettings.difficultyMode.displayName,
-                action: {
-                    showingDifficultyPicker = true
-                }
-            )
-            
-            SettingsRow(
-                icon: "grid",
-                title: "Grid Size",
-                subtitle: gameSettings.gridSizeDisplay,
-                action: {
-                    showingGridSizePicker = true
-                }
-            )
-            
-            SettingsToggleRow(
-                icon: "stopwatch",
-                title: "Timed Mode",
-                isOn: $gameSettings.timedModeEnabled
-            )
-            
-            // TODO: Implement show duration adjustment
-            // SettingsRow(
-            //     icon: "timer",
-            //     title: "Show Duration",
-            //     subtitle: gameSettings.showDurationDisplay,
-            //     action: {}
-            // )
-        }
     }
     
     private var audioSettingsSection: some View {

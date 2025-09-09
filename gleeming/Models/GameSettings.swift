@@ -10,7 +10,7 @@ import SwiftUI
 
 // MARK: - Game Settings
 class GameSettings: ObservableObject {
-    @Published var gridSize: Int = 4
+    @Published private var _gridSize: Int = 4
     @Published var difficultyMode: DifficultyMode = .random
     @Published var soundEffectsEnabled: Bool = true
     @Published var backgroundMusicEnabled: Bool = false
@@ -47,12 +47,49 @@ class GameSettings: ObservableObject {
     }
     
     // MARK: - Grid Size Options
+    enum GridSize: Int, CaseIterable {
+        case small = 3
+        case medium = 4
+        case large = 5
+        
+        var displayName: String {
+            switch self {
+            case .small:
+                return "3×3"
+            case .medium:
+                return "4×4"
+            case .large:
+                return "5×5"
+            }
+        }
+        
+        var description: String {
+            switch self {
+            case .small:
+                return "Perfect for beginners"
+            case .medium:
+                return "Good balance of challenge"
+            case .large:
+                return "Maximum difficulty"
+            }
+        }
+    }
+    
+    var gridSize: GridSize {
+        get {
+            return GridSize(rawValue: _gridSize) ?? .medium
+        }
+        set {
+            _gridSize = newValue.rawValue
+        }
+    }
+    
     var availableGridSizes: [Int] {
         return [3, 4, 5]
     }
     
     var gridSizeDisplay: String {
-        return "\(gridSize)×\(gridSize)"
+        return gridSize.displayName
     }
     
     // MARK: - Theme Options
@@ -99,7 +136,7 @@ class GameSettings: ObservableObject {
     // MARK: - Configuration Generation
     func createGameConfiguration() -> GameConfiguration {
         return GameConfiguration(
-            gridSize: gridSize,
+            gridSize: gridSize.rawValue,
             initialSequenceLength: 3,
             maxSequenceLength: 20,
             showDuration: showDuration,
