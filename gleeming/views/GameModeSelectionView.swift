@@ -25,6 +25,7 @@ struct GameModeSelectionView: View {
     @Binding var showGame: Bool
     @Environment(\.dismiss) private var dismiss
     @State private var showingGameSettings = false
+    @State private var showingMultiplayer = false
     
     var body: some View {
         NavigationView {
@@ -49,20 +50,19 @@ struct GameModeSelectionView: View {
                     }
                     .buttonStyle(PlainButtonStyle())
                     
-                    // Multiplayer Button (Disabled)
+                    // Multiplayer Button
                     Button {
-                        // No action - button is disabled
+                        showingMultiplayer = true
                     } label: {
                         GameModeCard(
                             icon: "person.2.fill",
                             title: "Multiplayer",
-                            subtitle: "Coming soon",
-                            color: .gray,
-                            isEnabled: false
+                            subtitle: "Play with friends online",
+                            color: .green,
+                            isEnabled: true
                         )
                     }
                     .buttonStyle(PlainButtonStyle())
-                    .disabled(true)
                 }
                 .padding(.horizontal, 24)
                 
@@ -78,6 +78,9 @@ struct GameModeSelectionView: View {
         }
         .sheet(isPresented: $showingGameSettings) {
             GameSettingsViewWrapper(showGame: $showGame)
+        }
+        .sheet(isPresented: $showingMultiplayer) {
+            MultiplayerLobbyViewWrapper()
         }
     }
 }
