@@ -22,6 +22,7 @@ class GameSettings: ObservableObject {
     @Published var timedModeEnabled: Bool = false
     @Published var forgivingModeEnabled: Bool = true
     @Published var notificationsEnabled: Bool = true
+    @Published var visualMode: VisualMode = .full
     
     static let shared = GameSettings()
     
@@ -116,6 +117,28 @@ class GameSettings: ObservableObject {
         }
     }
     
+    // MARK: - Visual Mode Options
+    enum VisualMode: String, CaseIterable {
+        case zen = "Zen"
+        case minimal = "Minimal"
+        case full = "Full"
+        
+        var displayName: String {
+            return rawValue
+        }
+        
+        var description: String {
+            switch self {
+            case .zen:
+                return "Show only tiles for maximum focus"
+            case .minimal:
+                return "Show essential controls only"
+            case .full:
+                return "Show complete interface with all elements"
+            }
+        }
+    }
+    
     // MARK: - Volume Display
     var volumeDisplay: String {
         return "\(Int(volume * 100))%"
@@ -180,6 +203,11 @@ class GameSettings: ObservableObject {
         if defaults.object(forKey: "notificationsEnabled") != nil {
             notificationsEnabled = defaults.bool(forKey: "notificationsEnabled")
         }
+        
+        if let visualModeRawValue = defaults.object(forKey: "visualMode") as? String,
+           let mode = VisualMode(rawValue: visualModeRawValue) {
+            visualMode = mode
+        }
     }
     
     func saveSettings() {
@@ -197,6 +225,7 @@ class GameSettings: ObservableObject {
         defaults.set(timedModeEnabled, forKey: "timedModeEnabled")
         defaults.set(forgivingModeEnabled, forKey: "forgivingModeEnabled")
         defaults.set(notificationsEnabled, forKey: "notificationsEnabled")
+        defaults.set(visualMode.rawValue, forKey: "visualMode")
     }
     
     // MARK: - Configuration Generation

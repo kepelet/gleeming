@@ -19,25 +19,142 @@ struct GameView: View {
         self._showGame = showGame
     }
     
+    // MARK: - Visual Mode Computed Properties
+    
+    private var shouldShowUIElements: Bool {
+        switch gameSettings.visualMode {
+        case .zen:
+            return viewModel.gameState == .gameOver
+        case .minimal:
+            return viewModel.gameState == .gameOver
+        case .full:
+            return true
+        }
+    }
+    
+    private var shouldShowHeader: Bool {
+        switch gameSettings.visualMode {
+        case .zen:
+            return false // Never show header in zen mode - complete focus on game
+        case .minimal:
+            return true // Always show menu button and title in minimal
+        case .full:
+            return true
+        }
+    }
+    
+    private var shouldShowGameStatus: Bool {
+        // Always show game stats regardless of visual mode
+        return true
+    }
+    
+    private var shouldShowMinimalTimerAndLives: Bool {
+        // Only show minimal timer and lives in Zen mode
+        if gameSettings.visualMode == .zen {
+            return viewModel.gameScore.isTimedMode || gameSettings.forgivingModeEnabled
+        }
+        return false // Minimal and Full modes use the original ScoreDisplayView
+    }
+    
+    private var shouldShowControlButtons: Bool {
+        // Always show control buttons when game is ready (for Start Game button)
+        if viewModel.gameState == .ready {
+            return true
+        }
+        
+        // For other states, follow visual mode rules
+        switch gameSettings.visualMode {
+        case .zen:
+            return viewModel.gameState == .gameOver
+        case .minimal:
+            return viewModel.gameState == .gameOver
+        case .full:
+            return true
+        }
+    }
+    
+    private var shouldShowSettingsButton: Bool {
+        switch gameSettings.visualMode {
+        case .zen:
+            return viewModel.gameState == .gameOver
+        case .minimal:
+            return false // Hide settings button in minimal mode
+        case .full:
+            return true
+        }
+    }
+    
     var body: some View {
         GeometryReader { geometry in
-            VStack(spacing: 24) {
-                // Header with score
-                headerView
-                
-                // Game status
-                gameStatusView
-                
-                // Game grid
-                gameGridSection(geometry: geometry)
-                
-                // Control buttons
-                controlButtonsView
-                
-                Spacer()
+            if gameSettings.visualMode == .full {
+                // Full mode: maintain current layout
+                VStack(spacing: shouldShowUIElements ? 24 : 0) {
+                    // Header with score (conditional based on visual mode)
+                    if shouldShowHeader {
+                        headerView
+                    }
+                    
+                    // Game status (conditional based on visual mode)
+                    if shouldShowGameStatus {
+                        gameStatusView
+                    }
+                    
+                    // Minimal timer and lives display (always shown when relevant)
+                    if shouldShowMinimalTimerAndLives {
+                        minimalTimerAndLivesView
+                    }
+                    
+                    // Game grid (always shown, but with different spacing)
+                    gameGridSection(geometry: geometry)
+                    
+                    // Control buttons (conditional based on visual mode)
+                    if shouldShowControlButtons {
+                        controlButtonsView
+                    }
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, shouldShowUIElements ? 20 : 0)
+                .padding(.top, shouldShowUIElements ? 20 : 0)
+            } else {
+                // Zen and Minimal modes: header at top, game content centered
+                VStack(spacing: 0) {
+                    // Header stays at top (conditional based on visual mode)
+                    if shouldShowHeader {
+                        headerView
+                            .padding(.horizontal, shouldShowUIElements ? 20 : 16)
+                            .padding(.top, shouldShowUIElements ? 20 : 0)
+                    }
+                    
+                    // Centered game content area
+                    VStack {
+                        Spacer()
+                        
+                        VStack(spacing: shouldShowUIElements ? 16 : 12) {
+                            // Game status (conditional based on visual mode)
+                            if shouldShowGameStatus {
+                                gameStatusView
+                            }
+                            
+                            // Minimal timer and lives display (always shown when relevant)
+                            if shouldShowMinimalTimerAndLives {
+                                minimalTimerAndLivesView
+                            }
+                            
+                            // Game grid (always shown, but with different spacing)
+                            gameGridSection(geometry: geometry)
+                            
+                            // Control buttons (conditional based on visual mode)
+                            if shouldShowControlButtons {
+                                controlButtonsView
+                            }
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, shouldShowUIElements ? 20 : 16)
+                }
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 20)
         }
         .overlay(
             // Confetti overlay
@@ -99,15 +216,21 @@ struct GameView: View {
                 
                 Spacer()
                 
-                Button(action: {
-                    showingSettings = true
-                }) {
-                    Image(systemName: "gearshape")
-                        .font(.title2)
-                        .foregroundColor(isSettingsDisabled ? .gray : .blue)
+                if shouldShowSettingsButton {
+                    Button(action: {
+                        showingSettings = true
+                    }) {
+                        Image(systemName: "gearshape")
+                            .font(.title2)
+                            .foregroundColor(isSettingsDisabled ? .gray : .blue)
+                    }
+                    .disabled(isSettingsDisabled)
+                    .frame(width: 60, alignment: .trailing)
+                } else {
+                    // Invisible spacer to maintain layout balance
+                    Spacer()
+                        .frame(width: 60)
                 }
-                .disabled(isSettingsDisabled)
-                .frame(width: 60, alignment: .trailing)
             }
             
             ScoreDisplayView(
@@ -142,8 +265,19 @@ struct GameView: View {
     }
     
     private func gameGridSection(geometry: GeometryProxy) -> some View {
-        let availableHeight = geometry.size.height - 300 // Reserve space for UI
-        let gridHeight = min(availableHeight, geometry.size.width - 40)
+        let availableHeight: CGFloat
+        let gridHeight: CGFloat
+        
+        if gameSettings.visualMode == .full {
+            // Full mode: original layout calculation
+            availableHeight = geometry.size.height - 300 // Reserve space for UI
+            gridHeight = min(availableHeight, geometry.size.width - 40)
+        } else {
+            // Zen and Minimal modes: more centered and compact
+            let uiSpaceNeeded: CGFloat = shouldShowUIElements ? 200 : 100
+            availableHeight = geometry.size.height - uiSpaceNeeded
+            gridHeight = min(availableHeight * 0.6, geometry.size.width - 32)
+        }
         
         return GameGridView(viewModel: viewModel)
             .frame(height: gridHeight)
@@ -158,11 +292,6 @@ struct GameView: View {
                 }
                 .buttonStyle(PrimaryButtonStyle())
             } else {
-                Button("Reset") {
-                    viewModel.resetGame()
-                }
-                .buttonStyle(SecondaryButtonStyle())
-                
                 if viewModel.gameState == .gameOver && !showingGameOver {
                     Button("Play Again") {
                         viewModel.startNewGame()
@@ -205,6 +334,58 @@ struct GameView: View {
     
     private var isSettingsDisabled: Bool {
         return viewModel.gameState == .showing || viewModel.gameState == .playing
+    }
+    
+    private var minimalTimerAndLivesView: some View {
+        HStack(spacing: 16) {
+            // Timer display for timed mode
+            if viewModel.gameScore.isTimedMode {
+                HStack(spacing: 4) {
+                    Image(systemName: "timer")
+                        .font(.caption)
+                        .foregroundColor(timerColor)
+                    
+                    Text(timeString)
+                        .font(.caption.monospacedDigit())
+                        .foregroundColor(timerColor)
+                }
+            }
+            
+            // Lives display for forgiving mode
+            if gameSettings.forgivingModeEnabled {
+                HStack(spacing: 3) {
+                    ForEach(0..<viewModel.gameScore.maxLives, id: \.self) { index in
+                        Image(systemName: index < viewModel.gameScore.lives ? "heart.fill" : "heart")
+                            .font(.caption)
+                            .foregroundColor(index < viewModel.gameScore.lives ? .red : .gray.opacity(0.3))
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color(.systemGray6).opacity(0.8))
+        )
+    }
+    
+    private var timeString: String {
+        let timeRemaining = viewModel.gameScore.timeRemaining
+        let minutes = Int(timeRemaining) / 60
+        let seconds = Int(timeRemaining) % 60
+        return String(format: "%d:%02d", minutes, seconds)
+    }
+    
+    private var timerColor: Color {
+        let timeRemaining = viewModel.gameScore.timeRemaining
+        if timeRemaining <= 3.0 {
+            return .red
+        } else if timeRemaining <= 10.0 {
+            return .orange
+        } else {
+            return .primary
+        }
     }
 }
 

@@ -30,87 +30,103 @@ struct GameSettingsView: View {
     @ObservedObject var gameSettings = GameSettings.shared
     @State private var showingDifficultyPicker = false
     @State private var showingGridSizePicker = false
+    @State private var showingVisualModePicker = false
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 24) {
-                // Header
-                VStack(spacing: 8) {
-                    Text("Game Settings")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    
-                    Text("Customize your game experience")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.top, 16)
-                
-                // Settings Cards
-                VStack(spacing: 16) {
-                    GameSettingCard(
-                        icon: "gamecontroller",
-                        title: "Game Mode",
-                        subtitle: gameSettings.difficultyMode.displayName,
-                        description: gameSettings.difficultyMode == .random ? 
-                            "Each level has a completely new pattern" : 
-                            "Each level adds one step to the pattern",
-                        color: .blue
-                    ) {
-                        showingDifficultyPicker = true
+            VStack(spacing: 0) {
+                // Header and Settings - Top Section
+                VStack(spacing: 24) {
+                    // Header
+                    VStack(spacing: 8) {
+                        Text("Game Settings")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                        
+                        Text("Customize your game experience")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                     }
+                    .padding(.top, 16)
                     
-                    GameSettingCard(
-                        icon: "grid",
-                        title: "Grid Size",
-                        subtitle: gameSettings.gridSizeDisplay,
-                        description: "Larger grids are more challenging",
-                        color: .green
-                    ) {
-                        showingGridSizePicker = true
+                    // Settings Cards
+                    VStack(spacing: 16) {
+                        GameSettingCard(
+                            icon: "gamecontroller",
+                            title: "Game Mode",
+                            subtitle: gameSettings.difficultyMode.displayName,
+                            description: gameSettings.difficultyMode == .random ? 
+                                "Each level has a completely new pattern" : 
+                                "Each level adds one step to the pattern",
+                            color: .blue
+                        ) {
+                            showingDifficultyPicker = true
+                        }
+                        
+                        GameSettingCard(
+                            icon: "grid",
+                            title: "Grid Size",
+                            subtitle: gameSettings.gridSizeDisplay,
+                            description: "Larger grids are more challenging",
+                            color: .green
+                        ) {
+                            showingGridSizePicker = true
+                        }
+                        
+                        GameSettingCard(
+                            icon: "eye",
+                            title: "Visual Mode",
+                            subtitle: gameSettings.visualMode.displayName,
+                            description: gameSettings.visualMode.description,
+                            color: .purple
+                        ) {
+                            showingVisualModePicker = true
+                        }
+                        
+                        GameSettingToggleCard(
+                            icon: "stopwatch",
+                            title: "Timed Mode",
+                            subtitle: gameSettings.timedModeEnabled ? "On" : "Off",
+                            description: gameSettings.timedModeEnabled ? 
+                                "Race against the clock for extra challenge" : 
+                                "Play at your own pace",
+                            color: .orange,
+                            isOn: $gameSettings.timedModeEnabled,
+                            onToggle: {
+                                gameSettings.saveSettings()
+                            }
+                        )
+                        
+                        GameSettingToggleCard(
+                            icon: "heart.fill",
+                            title: "Forgiving Mode",
+                            subtitle: gameSettings.forgivingModeEnabled ? "On" : "Off",
+                            description: gameSettings.forgivingModeEnabled ? 
+                                "Get 3 lives and continue playing after mistakes" : 
+                                "Classic mode - one mistake ends the game",
+                            color: .pink,
+                            isOn: $gameSettings.forgivingModeEnabled,
+                            onToggle: {
+                                gameSettings.saveSettings()
+                            }
+                        )
                     }
-                    
-                    GameSettingToggleCard(
-                        icon: "stopwatch",
-                        title: "Timed Mode",
-                        subtitle: gameSettings.timedModeEnabled ? "On" : "Off",
-                        description: gameSettings.timedModeEnabled ? 
-                            "Race against the clock for extra challenge" : 
-                            "Play at your own pace",
-                        color: .orange,
-                        isOn: $gameSettings.timedModeEnabled,
-                        onToggle: {
-                            gameSettings.saveSettings()
-                        }
-                    )
-                    
-                    GameSettingToggleCard(
-                        icon: "heart.fill",
-                        title: "Forgiving Mode",
-                        subtitle: gameSettings.forgivingModeEnabled ? "On" : "Off",
-                        description: gameSettings.forgivingModeEnabled ? 
-                            "Get 3 lives and continue playing after mistakes" : 
-                            "Classic mode - one mistake ends the game",
-                        color: .pink,
-                        isOn: $gameSettings.forgivingModeEnabled,
-                        onToggle: {
-                            gameSettings.saveSettings()
-                        }
-                    )
+                    .padding(.horizontal, 24)
                 }
-                .padding(.horizontal, 24)
                 
-                Spacer()
-                
-                // Start Game Button
-                Button("Start Game") {
-                    dismiss()
-                    showGame = true
+                // Centered Start Game Button Section
+                VStack {
+                    Spacer()
+                    
+                    Button("Start Game") {
+                        dismiss()
+                        showGame = true
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .padding(.horizontal, 24)
+                    
+                    Spacer()
                 }
-                .buttonStyle(PrimaryButtonStyle())
-                .padding(.horizontal, 24)
-                
-                Spacer()
             }
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
@@ -149,6 +165,21 @@ struct GameSettingsView: View {
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("Random: New pattern each level\nProgressive: Each level adds one step")
+        }
+        .confirmationDialog("Select Visual Mode", isPresented: $showingVisualModePicker) {
+            ForEach(GameSettings.VisualMode.allCases, id: \.self) { mode in
+                let isSelected = mode == gameSettings.visualMode
+                let title = isSelected ? "✓ \(mode.displayName)" : mode.displayName
+                
+                Button(title) {
+                    gameSettings.visualMode = mode
+                    gameSettings.saveSettings()
+                }
+            }
+            
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Zen: Show only tiles for maximum focus\nMinimal: Show essential controls only\nFull: Show complete interface")
         }
     }
 }

@@ -28,6 +28,7 @@ struct SettingsView: View {
     @Environment(\.themeManager) private var themeManager
     @State private var showingThemePicker = false
     @State private var showingVolumeSlider = false
+    @State private var showingVisualModePicker = false
     
     var body: some View {
         NavigationView {
@@ -68,6 +69,21 @@ struct SettingsView: View {
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("Auto: Follows system appearance\nLight: Always light mode\nDark: Always dark mode")
+        }
+        .confirmationDialog("Select Visual Mode", isPresented: $showingVisualModePicker) {
+            ForEach(GameSettings.VisualMode.allCases, id: \.self) { mode in
+                let isSelected = mode == gameSettings.visualMode
+                let title = isSelected ? "✓ \(mode.displayName)" : mode.displayName
+                
+                Button(title) {
+                    gameSettings.visualMode = mode
+                    gameSettings.saveSettings()
+                }
+            }
+            
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Zen: Show only tiles for maximum focus\nMinimal: Show essential controls only\nFull: Show complete interface with all elements")
         }
         .sheet(isPresented: $showingVolumeSlider) {
             VolumeAdjustmentView(isPresented: $showingVolumeSlider)
@@ -144,6 +160,13 @@ struct SettingsView: View {
                 title: "Theme",
                 subtitle: gameSettings.selectedTheme.displayName,
                 action: { showingThemePicker = true }
+            )
+            
+            SettingsRow(
+                icon: "eye",
+                title: "Visual Mode",
+                subtitle: gameSettings.visualMode.displayName,
+                action: { showingVisualModePicker = true }
             )
         }
     }
