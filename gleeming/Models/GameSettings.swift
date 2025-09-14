@@ -21,6 +21,7 @@ class GameSettings: ObservableObject {
     @Published var showDuration: Double = 0.6
     @Published var timedModeEnabled: Bool = false
     @Published var forgivingModeEnabled: Bool = true
+    @Published var notificationsEnabled: Bool = true
     
     static let shared = GameSettings()
     
@@ -175,6 +176,10 @@ class GameSettings: ObservableObject {
         if defaults.object(forKey: "forgivingModeEnabled") != nil {
             forgivingModeEnabled = defaults.bool(forKey: "forgivingModeEnabled")
         }
+        
+        if defaults.object(forKey: "notificationsEnabled") != nil {
+            notificationsEnabled = defaults.bool(forKey: "notificationsEnabled")
+        }
     }
     
     func saveSettings() {
@@ -191,6 +196,7 @@ class GameSettings: ObservableObject {
         defaults.set(showDuration, forKey: "showDuration")
         defaults.set(timedModeEnabled, forKey: "timedModeEnabled")
         defaults.set(forgivingModeEnabled, forKey: "forgivingModeEnabled")
+        defaults.set(notificationsEnabled, forKey: "notificationsEnabled")
     }
     
     // MARK: - Configuration Generation

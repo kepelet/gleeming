@@ -21,6 +21,9 @@ struct GameSettingsViewWrapper: View {
     }
 }
 
+
+
+
 struct GameSettingsView: View {
     @Binding var showGame: Bool
     @Environment(\.dismiss) private var dismiss

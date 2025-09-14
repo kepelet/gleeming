@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 // MARK: - Settings View Wrapper for proper theme reactivity
 struct SettingsViewWrapper: View {
@@ -39,6 +40,7 @@ struct SettingsView: View {
                     VStack(spacing: 20) {
                         audioSettingsSection
                         visualSettingsSection
+                        notificationSettingsSection
                         aboutSection
                     }
                     .padding(.horizontal, 20)
@@ -143,6 +145,12 @@ struct SettingsView: View {
                 subtitle: gameSettings.selectedTheme.displayName,
                 action: { showingThemePicker = true }
             )
+        }
+    }
+    
+    private var notificationSettingsSection: some View {
+        SettingsSection(title: "Notifications") {
+            NotificationSettingsToggleRow()
         }
     }
     
@@ -349,6 +357,170 @@ struct VolumeAdjustmentView: View {
         // Play a test note to preview volume
         let position = GridPosition(row: 0, column: 0)
         SoundManager.shared.playNoteForGridPosition(position, gridSize: 4)
+    }
+}
+
+// MARK: - Notification Settings Toggle Row
+struct NotificationSettingsToggleRow: View {
+    @ObservedObject private var gameSettings = GameSettings.shared
+    @StateObject private var notificationManager = NotificationManager.shared
+    @State private var showingPermissionAlert = false
+    
+    // Computed property to show actual notification state
+    private var isNotificationActuallyEnabled: Bool {
+        gameSettings.notificationsEnabled && notificationManager.authorizationStatus == .authorized
+    }
+    
+    private var notificationStatusText: String {
+        if !gameSettings.notificationsEnabled {
+            return "No daily reminders"
+        }
+        
+        switch notificationManager.authorizationStatus {
+        case .authorized:
+            return "Active - reminds you to play between 8-10 PM"
+        case .denied:
+            return "Permission denied - tap to enable in Settings"
+        case .notDetermined:
+            return "Permission will be requested automatically"
+        default:
+            return "Permission required"
+        }
+    }
+    
+    private var statusColor: Color {
+        if !gameSettings.notificationsEnabled {
+            return .secondary
+        }
+        
+        switch notificationManager.authorizationStatus {
+        case .authorized:
+            return .secondary
+        case .denied:
+            return .orange
+        case .notDetermined:
+            return .blue
+        default:
+            return .orange
+        }
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                Image(systemName: isNotificationActuallyEnabled ? "bell.fill" : "bell.slash.fill")
+                    .font(.title3)
+                    .foregroundColor(isNotificationActuallyEnabled ? .blue : .gray)
+                    .frame(width: 24)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Daily Reminders")
+                        .font(.body)
+                        .foregroundColor(.primary)
+                    
+                    Text(notificationStatusText)
+                        .font(.caption)
+                        .foregroundColor(statusColor)
+                }
+                
+                Spacer()
+                
+                Toggle("", isOn: $gameSettings.notificationsEnabled)
+                    .labelsHidden()
+                    .onChange(of: gameSettings.notificationsEnabled) { _, newValue in
+                        handleNotificationToggle()
+                    }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            
+            if gameSettings.notificationsEnabled {
+                VStack(alignment: .leading, spacing: 8) {
+                    Divider()
+                        .padding(.horizontal, 16)
+                    
+                    HStack {
+                        if notificationManager.authorizationStatus == .authorized {
+                            Text("Get gentle reminders to play memory games instead of mindless scrolling")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.leading)
+                        } else if notificationManager.authorizationStatus == .denied {
+                            Text("Notifications are disabled. Tap the toggle again to open Settings and enable them.")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                                .multilineTextAlignment(.leading)
+                        } else {
+                            Text("We'll ask for notification permission to send gentle reminders for healthy screen time habits")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                                .multilineTextAlignment(.leading)
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 12)
+                }
+            }
+        }
+        .alert("Enable Notifications", isPresented: $showingPermissionAlert) {
+            Button("Settings") {
+                openAppSettings()
+            }
+            Button("Cancel", role: .cancel) {
+                gameSettings.notificationsEnabled = false
+                gameSettings.saveSettings()
+            }
+        } message: {
+            Text("To receive memory training reminders, please enable notifications in Settings.")
+        }
+    }
+    
+    private func handleNotificationToggle() {
+        if gameSettings.notificationsEnabled {
+            // User wants to enable notifications
+            switch notificationManager.authorizationStatus {
+            case .notDetermined:
+                // Request permission for first time
+                Task {
+                    let granted = await notificationManager.requestAuthorization()
+                    if !granted {
+                        await MainActor.run {
+                            gameSettings.notificationsEnabled = false
+                            gameSettings.saveSettings()
+                        }
+                    } else {
+                        await MainActor.run {
+                            gameSettings.saveSettings()
+                            notificationManager.updateNotificationSettings()
+                        }
+                    }
+                }
+            case .denied:
+                // Permission was denied, open Settings directly
+                openAppSettings()
+                // Keep the toggle on since user indicated they want notifications
+                gameSettings.saveSettings()
+            case .authorized:
+                // Already authorized, just save and schedule
+                gameSettings.saveSettings()
+                notificationManager.updateNotificationSettings()
+            default:
+                // Other states (provisional, ephemeral) - try to save anyway
+                gameSettings.saveSettings()
+                notificationManager.updateNotificationSettings()
+            }
+        } else {
+            // User wants to disable notifications
+            gameSettings.saveSettings()
+            notificationManager.updateNotificationSettings()
+        }
+    }
+    
+    private func openAppSettings() {
+        if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(settingsUrl)
+        }
     }
 }
 

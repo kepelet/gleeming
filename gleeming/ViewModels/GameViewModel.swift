@@ -322,6 +322,9 @@ class GameViewModel: ObservableObject {
             userStats.addPlayTime(playDuration)
         }
         
+        // Update notifications with latest scores
+        NotificationManager.shared.updateNotificationSettings()
+        
         Task {
             for position in sequence {
                 gridCells[position.row][position.column].isHighlighted = true
