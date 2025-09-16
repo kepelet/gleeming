@@ -13,6 +13,8 @@ struct GameView: View {
     @State private var showingGameOver = false
     @State private var showingSettings = false
     @State private var showingShareResult = false
+    @State private var showingExitConfirmation = false
+    @State private var showingPauseMenu = false
     @Binding var showGame: Bool
     
     init(showGame: Binding<Bool> = .constant(true)) {
@@ -49,39 +51,36 @@ struct GameView: View {
     }
     
     private var shouldShowMinimalTimerAndLives: Bool {
-        // Only show minimal timer and lives in Zen mode
-        if gameSettings.visualMode == .zen {
+        // Show minimal timer and lives in Zen and Minimal modes
+        if gameSettings.visualMode == .zen || gameSettings.visualMode == .minimal {
             return viewModel.gameScore.isTimedMode || gameSettings.forgivingModeEnabled
         }
-        return false // Minimal and Full modes use the original ScoreDisplayView
+        return false // Only Full mode uses the original ScoreDisplayView
+    }
+    
+    private var shouldShowMinimalStats: Bool {
+        // Show minimal stats only in Minimal mode
+        return gameSettings.visualMode == .minimal
     }
     
     private var shouldShowControlButtons: Bool {
-        // Always show control buttons when game is ready (for Start Game button)
+        // Always show Start Game button when ready, regardless of visual mode
         if viewModel.gameState == .ready {
             return true
         }
         
-        // For other states, follow visual mode rules
-        switch gameSettings.visualMode {
-        case .zen:
-            return viewModel.gameState == .gameOver
-        case .minimal:
-            return viewModel.gameState == .gameOver
-        case .full:
+        // Show Play Again and Reset buttons when game over
+        if viewModel.gameState == .gameOver {
             return true
         }
+        
+        return false
     }
     
     private var shouldShowSettingsButton: Bool {
-        switch gameSettings.visualMode {
-        case .zen:
-            return viewModel.gameState == .gameOver
-        case .minimal:
-            return false // Hide settings button in minimal mode
-        case .full:
-            return true
-        }
+        // Show settings button when game is ready, but only in minimal and full modes
+        return viewModel.gameState == .ready && 
+               (gameSettings.visualMode == .minimal || gameSettings.visualMode == .full)
     }
     
     var body: some View {
@@ -102,6 +101,11 @@ struct GameView: View {
                     // Minimal timer and lives display (always shown when relevant)
                     if shouldShowMinimalTimerAndLives {
                         minimalTimerAndLivesView
+                    }
+                    
+                    // Minimal stats display (only in Minimal mode)
+                    if shouldShowMinimalStats {
+                        minimalStatsView
                     }
                     
                     // Game grid (always shown, but with different spacing)
@@ -141,6 +145,11 @@ struct GameView: View {
                                 minimalTimerAndLivesView
                             }
                             
+                            // Minimal stats display (only in Minimal mode)
+                            if shouldShowMinimalStats {
+                                minimalStatsView
+                            }
+                            
                             // Game grid (always shown, but with different spacing)
                             gameGridSection(geometry: geometry)
                             
@@ -161,15 +170,7 @@ struct GameView: View {
             ConfettiView(isActive: viewModel.showConfetti)
                 .allowsHitTesting(false)
         )
-        .overlay(
-            // Pause button overlay
-            pauseButtonOverlay,
-            alignment: .topTrailing
-        )
-        .overlay(
-            // Pause menu overlay
-            pauseMenuOverlay
-        )
+
         .onChange(of: viewModel.gameState) { oldValue, newValue in
             if newValue == .gameOver {
                 showingGameOver = true
@@ -195,6 +196,34 @@ struct GameView: View {
         } message: {
             Text("Final Score: \(viewModel.gameScore.totalScore)\nBest Streak: \(viewModel.gameScore.bestStreak)")
         }
+        .alert("Exit Game?", isPresented: $showingExitConfirmation) {
+            Button("Cancel", role: .cancel) {
+                // Resume the game if it was paused by menu button
+                if viewModel.gameState == .paused {
+                    viewModel.resumeGame()
+                }
+            }
+            Button("Exit", role: .destructive) {
+                viewModel.resetGame()
+                showGame = false
+            }
+        } message: {
+            Text("Your current progress will be lost. Are you sure you want to exit?")
+        }
+        .alert("Game Paused", isPresented: $showingPauseMenu) {
+            Button("Resume") {
+                viewModel.resumeGame()
+            }
+            Button("Reset Game") {
+                viewModel.resetGame()
+            }
+            Button("Main Menu") {
+                viewModel.resetGame()
+                showGame = false
+            }
+        } message: {
+            Text("Game is paused. Choose an option to continue.")
+        }
         .sheet(isPresented: $showingSettings) {
             SettingsViewWrapper(isPresented: $showingSettings)
         }
@@ -210,8 +239,7 @@ struct GameView: View {
         VStack(spacing: 12) {
             HStack {
                 Button("← Menu") {
-                    viewModel.resetGame()
-                    showGame = false
+                    handleMenuButtonPressed()
                 }
                 .font(.headline)
                 .foregroundColor(.blue)
@@ -225,27 +253,39 @@ struct GameView: View {
                 
                 Spacer()
                 
-                if shouldShowSettingsButton {
-                    Button(action: {
-                        showingSettings = true
-                    }) {
-                        Image(systemName: "gearshape")
-                            .font(.title2)
-                            .foregroundColor(isSettingsDisabled ? .gray : .blue)
+                HStack(spacing: 8) {
+                    if shouldShowSettingsButton {
+                        Button(action: {
+                            showingSettings = true
+                        }) {
+                            Image(systemName: "gearshape")
+                                .font(.title2)
+                                .foregroundColor(isSettingsDisabled ? .gray : .blue)
+                        }
+                        .disabled(isSettingsDisabled)
                     }
-                    .disabled(isSettingsDisabled)
-                    .frame(width: 60, alignment: .trailing)
-                } else {
-                    // Invisible spacer to maintain layout balance
-                    Spacer()
-                        .frame(width: 60)
+                    
+                    if shouldShowPauseButton {
+                        Button(action: {
+                            viewModel.pauseGame()
+                            showingPauseMenu = true
+                        }) {
+                            Image(systemName: "pause.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+                        }
+                    }
                 }
+                .frame(width: 60, alignment: .trailing)
             }
             
-            ScoreDisplayView(
-                score: viewModel.gameScore,
-                gameState: viewModel.gameState
-            )
+            // Only show full ScoreDisplayView in Full mode
+            if gameSettings.visualMode == .full {
+                ScoreDisplayView(
+                    score: viewModel.gameScore,
+                    gameState: viewModel.gameState
+                )
+            }
         }
     }
     
@@ -300,14 +340,18 @@ struct GameView: View {
                     viewModel.startNewGame()
                 }
                 .buttonStyle(PrimaryButtonStyle())
-            } else {
-                if viewModel.gameState == .gameOver && !showingGameOver {
-                    Button("Play Again") {
-                        viewModel.startNewGame()
-                    }
-                    .buttonStyle(PrimaryButtonStyle())
+            } else if viewModel.gameState == .gameOver && !showingGameOver {
+                Button("Play Again") {
+                    viewModel.startNewGame()
                 }
+                .buttonStyle(PrimaryButtonStyle())
+                
+                Button("Reset") {
+                    viewModel.resetGame()
+                }
+                .buttonStyle(SecondaryButtonStyle())
             }
+           
         }
     }
     
@@ -349,68 +393,36 @@ struct GameView: View {
         return viewModel.gameState == .showing || viewModel.gameState == .playing
     }
     
-    private var pauseButtonOverlay: some View {
-        VStack {
-            HStack {
-                Spacer()
-                
-                if shouldShowPauseButton {
-                    Button(action: {
-                        viewModel.pauseGame()
-                    }) {
-                        Image(systemName: "pause.circle.fill")
-                            .font(.title)
-                            .foregroundColor(.white)
-                            .background(Color.black.opacity(0.6))
-                            .clipShape(Circle())
-                    }
-                    .padding(.top, 20)
-                    .padding(.trailing, 20)
-                }
+    private func handleMenuButtonPressed() {
+        // Check if game is actively being played
+        if isGameActive {
+            // Pause the game first
+            if viewModel.gameState != .paused {
+                viewModel.pauseGame()
             }
-            
-            Spacer()
+            showingExitConfirmation = true
+        } else {
+            // Safe to exit immediately
+            viewModel.resetGame()
+            showGame = false
         }
     }
+    
+    private var isGameActive: Bool {
+        return viewModel.gameState == .playing || 
+               viewModel.gameState == .showing || 
+               viewModel.gameState == .waiting ||
+               viewModel.gameState == .paused
+    }
+    
+
     
     private var shouldShowPauseButton: Bool {
-        return (viewModel.gameState == .playing || viewModel.gameState == .showing) && 
-               (gameSettings.visualMode == .full || gameSettings.visualMode == .minimal)
+        // Pause button is available in all visual modes during active gameplay
+        return viewModel.gameState == .playing || viewModel.gameState == .showing
     }
     
-    @ViewBuilder
-    private var pauseMenuOverlay: some View {
-        if viewModel.gameState == .paused {
-            Color.black.opacity(0.7)
-                .ignoresSafeArea()
-                .overlay(
-                    VStack(spacing: 24) {
-                        Text("Game Paused")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                        
-                        VStack(spacing: 16) {
-                            Button("Resume") {
-                                viewModel.resumeGame()
-                            }
-                            .buttonStyle(PrimaryButtonStyle())
-                            
-                            Button("Reset Game") {
-                                viewModel.resetGame()
-                            }
-                            .buttonStyle(SecondaryButtonStyle())
-                            
-                            Button("Main Menu") {
-                                viewModel.resetGame()
-                                showGame = false
-                            }
-                            .buttonStyle(SecondaryButtonStyle())
-                        }
-                    }
-                )
-        }
-    }
+
     
     private var minimalTimerAndLivesView: some View {
         HStack(spacing: 16) {
@@ -443,6 +455,45 @@ struct GameView: View {
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color(.systemGray6).opacity(0.8))
+        )
+    }
+    
+    private var minimalStatsView: some View {
+        HStack(spacing: 12) {
+            // Level
+            HStack(spacing: 2) {
+                Text("L")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                Text("\(viewModel.gameScore.currentLevel)")
+                    .font(.caption)
+                    .fontWeight(.medium)
+            }
+            
+            // Score
+            HStack(spacing: 2) {
+                Text("S")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                Text("\(viewModel.gameScore.totalScore)")
+                    .font(.caption)
+                    .fontWeight(.medium)
+            }
+            
+            // Streak
+            HStack(spacing: 2) {
+                Text("⚡")
+                    .font(.caption2)
+                Text("\(viewModel.gameScore.streak)")
+                    .font(.caption)
+                    .fontWeight(.medium)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Color(.systemGray6).opacity(0.6))
         )
     }
     
