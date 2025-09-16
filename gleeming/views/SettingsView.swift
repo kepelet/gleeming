@@ -29,6 +29,7 @@ struct SettingsView: View {
     @State private var showingThemePicker = false
     @State private var showingVolumeSlider = false
     @State private var showingVisualModePicker = false
+    @StateObject private var backgroundMusicManager = BackgroundMusicManager.shared
     
     var body: some View {
         NavigationView {
@@ -54,6 +55,10 @@ struct SettingsView: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        .onDisappear {
+            // Stop any preview when settings is dismissed
+            backgroundMusicManager.stopPreview()
+        }
 
         .confirmationDialog("Select Theme", isPresented: $showingThemePicker) {
             ForEach(GameSettings.Theme.allCases, id: \.self) { theme in
@@ -85,6 +90,7 @@ struct SettingsView: View {
         } message: {
             Text("Zen: Show only tiles for maximum focus\nMinimal: Show essential controls only\nFull: Show complete interface with all elements")
         }
+
         .sheet(isPresented: $showingVolumeSlider) {
             VolumeAdjustmentView(isPresented: $showingVolumeSlider)
                 .presentationDetents([.height(200)])
@@ -95,6 +101,8 @@ struct SettingsView: View {
     private var headerView: some View {
         HStack {
             Button("Done") {
+                // Stop any music preview when closing settings
+                backgroundMusicManager.stopPreview()
                 isPresented = false
             }
             .font(.headline)
@@ -124,13 +132,19 @@ struct SettingsView: View {
                 isOn: $gameSettings.soundEffectsEnabled
             )
 
-            // TODO: Implement background music
-            // SettingsToggleRow(
-            //     icon: "music.note",
-            //     title: "Background Music",
-            //     isOn: $gameSettings.backgroundMusicEnabled
-            // )
-
+            SettingsToggleRow(
+                icon: "music.note",
+                title: "Background Music",
+                isOn: $gameSettings.backgroundMusicEnabled
+            )
+            .onChange(of: gameSettings.backgroundMusicEnabled) { _, newValue in
+                backgroundMusicManager.handleBackgroundMusicSettingChanged()
+                gameSettings.saveSettings()
+            }
+            
+            if gameSettings.backgroundMusicEnabled {
+                MusicSelectionSection()
+            }
             
             SettingsRow(
                 icon: "speaker.3",
@@ -352,9 +366,15 @@ struct VolumeAdjustmentView: View {
                     Slider(value: $gameSettings.volume, in: 0...1) { editing in
                         if !editing {
                             gameSettings.saveSettings()
+                            // Update background music volume
+                            BackgroundMusicManager.shared.updateVolume()
                             // Play test sound when user stops dragging
                             playTestSound()
                         }
+                    }
+                    .onChange(of: gameSettings.volume) { _, _ in
+                        // Update background music volume in real-time while dragging
+                        BackgroundMusicManager.shared.updateVolume()
                     }
                     
                     Image(systemName: "speaker.3")
@@ -543,6 +563,92 @@ struct NotificationSettingsToggleRow: View {
     private func openAppSettings() {
         if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(settingsUrl)
+        }
+    }
+}
+
+// MARK: - Music Selection Section
+struct MusicSelectionSection: View {
+    @ObservedObject private var gameSettings = GameSettings.shared
+    @StateObject private var backgroundMusicManager = BackgroundMusicManager.shared
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(BackgroundMusicManager.MusicTrack.allCases, id: \.self) { track in
+                MusicTrackRow(track: track)
+                
+                if track != BackgroundMusicManager.MusicTrack.allCases.last {
+                    Divider()
+                        .padding(.leading, 52)
+                }
+            }
+        }
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .onDisappear {
+            // Stop any preview when settings is closed
+            backgroundMusicManager.stopPreview()
+        }
+    }
+}
+
+struct MusicTrackRow: View {
+    let track: BackgroundMusicManager.MusicTrack
+    @ObservedObject private var gameSettings = GameSettings.shared
+    @StateObject private var backgroundMusicManager = BackgroundMusicManager.shared
+    
+    private var isSelected: Bool {
+        track.fileName == gameSettings.selectedBackgroundMusic
+    }
+    
+    private var isCurrentlyPreviewing: Bool {
+        backgroundMusicManager.isPreviewPlaying && backgroundMusicManager.currentPreviewTrack == track
+    }
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Selection indicator
+            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                .font(.title3)
+                .foregroundColor(isSelected ? .blue : .gray)
+                .frame(width: 24)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(track.displayName)
+                    .font(.body)
+                    .foregroundColor(.primary)
+                
+                if isSelected {
+                    Text("Currently selected")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
+            }
+            
+            Spacer()
+            
+            // Preview button
+            Button(action: {
+                if isCurrentlyPreviewing {
+                    backgroundMusicManager.stopPreview()
+                } else {
+                    backgroundMusicManager.togglePreview(for: track)
+                }
+            }) {
+                Image(systemName: isCurrentlyPreviewing ? "stop.circle.fill" : "play.circle")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            // Select this track
+            gameSettings.selectedBackgroundMusic = track.fileName
+            gameSettings.saveSettings()
+            backgroundMusicManager.setTrack(track)
         }
     }
 }

@@ -16,8 +16,9 @@ class GameSettings: ObservableObject {
     @Published var backgroundMusicEnabled: Bool = false
     @Published var confettiEnabled: Bool = true
     @Published var hapticFeedbackEnabled: Bool = true
-    @Published var volume: Float = 0.8
+    @Published var volume: Float = 0.3 // Start with a safe, low volume
     @Published var selectedTheme: Theme = .auto
+    @Published var selectedBackgroundMusic: String = "calming-rain"
     @Published var showDuration: Double = 0.6
     @Published var timedModeEnabled: Bool = false
     @Published var forgivingModeEnabled: Bool = true
@@ -188,6 +189,10 @@ class GameSettings: ObservableObject {
             selectedTheme = theme
         }
         
+        if let musicTrack = defaults.object(forKey: "selectedBackgroundMusic") as? String {
+            selectedBackgroundMusic = musicTrack
+        }
+        
         if defaults.object(forKey: "showDuration") != nil {
             showDuration = defaults.double(forKey: "showDuration")
         }
@@ -221,6 +226,7 @@ class GameSettings: ObservableObject {
         defaults.set(hapticFeedbackEnabled, forKey: "hapticFeedbackEnabled")
         defaults.set(volume, forKey: "volume")
         defaults.set(selectedTheme.rawValue, forKey: "selectedTheme")
+        defaults.set(selectedBackgroundMusic, forKey: "selectedBackgroundMusic")
         defaults.set(showDuration, forKey: "showDuration")
         defaults.set(timedModeEnabled, forKey: "timedModeEnabled")
         defaults.set(forgivingModeEnabled, forKey: "forgivingModeEnabled")

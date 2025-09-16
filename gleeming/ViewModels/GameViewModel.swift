@@ -31,6 +31,7 @@ class GameViewModel: ObservableObject {
     private var baseSequence: [GridPosition] = [] // For progressive mode
     private let hapticManager = HapticManager.shared
     private let soundManager = SoundManager.shared
+    private let backgroundMusicManager = BackgroundMusicManager.shared
     
     init() {
         setupGrid()
@@ -78,6 +79,7 @@ class GameViewModel: ObservableObject {
         
         baseSequence = [] // Reset base sequence for progressive mode
         hapticManager.gameStarted()
+        backgroundMusicManager.startGameMusic()
         startNewRound()
     }
     
@@ -92,6 +94,7 @@ class GameViewModel: ObservableObject {
         showSequenceTask?.cancel()
         timerTask?.cancel()
         soundManager.stopAllSounds()
+        backgroundMusicManager.stopGameMusic()
         gameState = .ready
         resetGrid()
         sequence = []
@@ -116,8 +119,9 @@ class GameViewModel: ObservableObject {
         // Stop any sequence showing
         showSequenceTask?.cancel()
         
-        // Stop sounds
+        // Stop sounds and pause music
         soundManager.stopAllSounds()
+        backgroundMusicManager.pauseGameMusic()
         
         hapticManager.correctSelection()
     }
@@ -133,6 +137,9 @@ class GameViewModel: ObservableObject {
         if gameSettings.timedModeEnabled && stateToResume == .playing {
             startTimer()
         }
+        
+        // Resume background music
+        backgroundMusicManager.resumeGameMusic()
         
         // If we were showing sequence, restart the sequence
         if stateToResume == .showing {
