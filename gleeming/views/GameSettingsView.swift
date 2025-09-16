@@ -50,7 +50,7 @@ struct GameSettingsView: View {
                     .padding(.top, 16)
                     
                     // Settings Cards
-                    VStack(spacing: 16) {
+                    VStack(spacing: 12) {
                         GameSettingCard(
                             icon: "gamecontroller",
                             title: "Game Mode",
@@ -195,21 +195,22 @@ struct GameSettingCard: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 0) {
-                HStack(spacing: 16) {
+                HStack(spacing: 12) {
                     Image(systemName: icon)
-                        .font(.system(size: 24))
+                        .font(.system(size: 20))
                         .foregroundColor(color)
-                        .frame(width: 40, height: 40)
+                        .frame(width: 32, height: 32)
                         .background(color.opacity(0.1))
-                        .cornerRadius(10)
+                        .cornerRadius(8)
                     
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text(title)
-                            .font(.headline)
+                            .font(.callout)
+                            .fontWeight(.medium)
                             .foregroundColor(.primary)
                         
                         Text(subtitle)
-                            .font(.subheadline)
+                            .font(.caption)
                             .fontWeight(.medium)
                             .foregroundColor(color)
                     }
@@ -217,27 +218,27 @@ struct GameSettingCard: View {
                     Spacer()
                     
                     Image(systemName: "chevron.right")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(.secondary)
                 }
-                .padding(16)
+                .padding(12)
                 
                 if !description.isEmpty {
                     HStack {
                         Text(description)
-                            .font(.caption)
+                            .font(.caption2)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.leading)
                         Spacer()
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 16)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 10)
                 }
             }
         }
         .buttonStyle(PlainButtonStyle())
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(16)
+        .cornerRadius(12)
     }
 }
 
@@ -252,21 +253,22 @@ struct GameSettingToggleCard: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 16) {
+            HStack(spacing: 12) {
                 Image(systemName: icon)
-                    .font(.system(size: 24))
+                    .font(.system(size: 20))
                     .foregroundColor(color)
-                    .frame(width: 40, height: 40)
+                    .frame(width: 32, height: 32)
                     .background(color.opacity(0.1))
-                    .cornerRadius(10)
+                    .cornerRadius(8)
                 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.headline)
+                        .font(.callout)
+                        .fontWeight(.medium)
                         .foregroundColor(.primary)
                     
                     Text(subtitle)
-                        .font(.subheadline)
+                        .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(color)
                 }
@@ -279,22 +281,22 @@ struct GameSettingToggleCard: View {
                         onToggle()
                     }
             }
-            .padding(16)
+            .padding(12)
             
             if !description.isEmpty {
                 HStack {
                     Text(description)
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.leading)
                     Spacer()
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
+                .padding(.horizontal, 12)
+                .padding(.bottom, 10)
             }
         }
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(16)
+        .cornerRadius(12)
     }
 }
 
