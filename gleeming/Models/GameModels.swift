@@ -14,6 +14,7 @@ enum GameState {
     case showing
     case waiting
     case playing
+    case paused
     case gameOver
 }
 

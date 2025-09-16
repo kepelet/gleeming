@@ -161,6 +161,15 @@ struct GameView: View {
             ConfettiView(isActive: viewModel.showConfetti)
                 .allowsHitTesting(false)
         )
+        .overlay(
+            // Pause button overlay
+            pauseButtonOverlay,
+            alignment: .topTrailing
+        )
+        .overlay(
+            // Pause menu overlay
+            pauseMenuOverlay
+        )
         .onChange(of: viewModel.gameState) { oldValue, newValue in
             if newValue == .gameOver {
                 showingGameOver = true
@@ -312,6 +321,8 @@ struct GameView: View {
             return "Level Complete!"
         case .playing:
             return "Repeat the Pattern"
+        case .paused:
+            return "Game Paused"
         case .gameOver:
             return "Game Over"
         }
@@ -327,6 +338,8 @@ struct GameView: View {
             return .green
         case .playing:
             return .orange
+        case .paused:
+            return .yellow
         case .gameOver:
             return .red
         }
@@ -334,6 +347,69 @@ struct GameView: View {
     
     private var isSettingsDisabled: Bool {
         return viewModel.gameState == .showing || viewModel.gameState == .playing
+    }
+    
+    private var pauseButtonOverlay: some View {
+        VStack {
+            HStack {
+                Spacer()
+                
+                if shouldShowPauseButton {
+                    Button(action: {
+                        viewModel.pauseGame()
+                    }) {
+                        Image(systemName: "pause.circle.fill")
+                            .font(.title)
+                            .foregroundColor(.white)
+                            .background(Color.black.opacity(0.6))
+                            .clipShape(Circle())
+                    }
+                    .padding(.top, 20)
+                    .padding(.trailing, 20)
+                }
+            }
+            
+            Spacer()
+        }
+    }
+    
+    private var shouldShowPauseButton: Bool {
+        return (viewModel.gameState == .playing || viewModel.gameState == .showing) && 
+               (gameSettings.visualMode == .full || gameSettings.visualMode == .minimal)
+    }
+    
+    @ViewBuilder
+    private var pauseMenuOverlay: some View {
+        if viewModel.gameState == .paused {
+            Color.black.opacity(0.7)
+                .ignoresSafeArea()
+                .overlay(
+                    VStack(spacing: 24) {
+                        Text("Game Paused")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                        
+                        VStack(spacing: 16) {
+                            Button("Resume") {
+                                viewModel.resumeGame()
+                            }
+                            .buttonStyle(PrimaryButtonStyle())
+                            
+                            Button("Reset Game") {
+                                viewModel.resetGame()
+                            }
+                            .buttonStyle(SecondaryButtonStyle())
+                            
+                            Button("Main Menu") {
+                                viewModel.resetGame()
+                                showGame = false
+                            }
+                            .buttonStyle(SecondaryButtonStyle())
+                        }
+                    }
+                )
+        }
     }
     
     private var minimalTimerAndLivesView: some View {

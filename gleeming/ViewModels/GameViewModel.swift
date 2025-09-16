@@ -21,6 +21,7 @@ class GameViewModel: ObservableObject {
     @Published var mistakeMessage = ""
     
     private var gameStartTime: Date?
+    private var previousGameState: GameState?
     
     private var gameSettings = GameSettings.shared
     private var userStats = UserStats.shared
@@ -100,6 +101,45 @@ class GameViewModel: ObservableObject {
         showConfetti = false // Reset confetti state
         showMistakeMessage = false // Reset mistake message
         mistakeMessage = ""
+    }
+    
+    func pauseGame() {
+        guard gameState == .playing || gameState == .showing else { return }
+        
+        // Store the previous state to resume correctly
+        previousGameState = gameState
+        gameState = .paused
+        
+        // Pause timer if in timed mode
+        timerTask?.cancel()
+        
+        // Stop any sequence showing
+        showSequenceTask?.cancel()
+        
+        // Stop sounds
+        soundManager.stopAllSounds()
+        
+        hapticManager.correctSelection()
+    }
+    
+    func resumeGame() {
+        guard gameState == .paused else { return }
+        
+        // Resume to the previous state
+        let stateToResume = previousGameState ?? .playing
+        gameState = stateToResume
+        
+        // Restart timer if in timed mode and we were playing
+        if gameSettings.timedModeEnabled && stateToResume == .playing {
+            startTimer()
+        }
+        
+        // If we were showing sequence, restart the sequence
+        if stateToResume == .showing {
+            showSequence()
+        }
+        
+        hapticManager.sequenceStarted()
     }
     
     // MARK: - Grid Management
